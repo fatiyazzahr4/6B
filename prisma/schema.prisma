@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../app/generated/prisma"
@@ -10,4 +5,323 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+model admin {
+  id_admin     String    @id @db.VarChar(10)
+  id_akun      String    @db.VarChar(10)
+  username     String    @db.VarChar(50)
+  password     String    @db.VarChar(100)
+  nama_lengkap String    @db.VarChar(100)
+  no_telepon   String    @db.VarChar(20)
+  email        String    @db.VarChar(100)
+  alamat_jalan String    @db.VarChar(150)
+  alamat_rt    String    @db.VarChar(10)
+  alamat_rw    String    @db.VarChar(10)
+  kode_pos     String    @db.VarChar(10)
+  akun         akun      @relation(fields: [id_akun], references: [id_akun])
+  barang       barang[]
+  laporan      laporan[]
+}
+
+model akun {
+  id_akun        String           @id @db.VarChar(10)
+  username       String           @unique @db.VarChar(50)
+  password       String           @db.VarChar(100)
+  nama_lengkap   String           @db.VarChar(100)
+  no_telepon     String           @db.VarChar(20)
+  email          String           @unique @db.VarChar(100)
+  alamat_jalan   String           @db.VarChar(150)
+  alamat_rt      String           @db.VarChar(10)
+  alamat_rw      String           @db.VarChar(10)
+  kode_pos       String           @db.VarChar(10)
+  role           String           @db.VarChar(30)
+  admin          admin[]
+  kasir          kasir[]
+  owner          owner[]
+  pelanggan      pelanggan[]
+  pengelola_toko pengelola_toko[]
+  pengguna       pengguna[]
+}
+
+model alamat {
+  alamat_desa      String     @id @db.VarChar(100)
+  alamat_kecamatan String     @db.VarChar(100)
+  alamat_kabupaten String     @db.VarChar(100)
+  alamat_provinsi  String     @db.VarChar(100)
+  kode_pos         kode_pos[]
+}
+
+model backup_data {
+  id_backup      String   @id @db.VarChar(15)
+  id_admin       String   @db.VarChar(15)
+  tanggal_backup DateTime @db.Date
+  nama_file      String   @db.VarChar(100)
+  status         String   @db.VarChar(15)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model barang {
+  id_barang        String             @id @db.VarChar(10)
+  id_admin         String             @db.VarChar(10)
+  nama_barang      String             @db.VarChar(100)
+  kategori         String             @db.VarChar(50)
+  satuan           String             @db.VarChar(20)
+  harga_satuan     Decimal            @db.Decimal(12, 2)
+  stok_minimum     Int
+  admin            admin              @relation(fields: [id_admin], references: [id_admin])
+  detail_pesanan   detail_pesanan[]
+  detail_transaksi detail_transaksi[]
+  stok             stok[]
+}
+
+model data_akun {
+  id_akun        String          @id @db.VarChar(15)
+  username       String          @unique @db.VarChar(50)
+  email          String          @unique @db.VarChar(100)
+  password       String          @db.VarChar(200)
+  nama_lengkap   String          @db.VarChar(100)
+  nomor_telepon  String          @db.VarChar(15)
+  alamat_jalan   String          @db.VarChar(100)
+  alamat_rt      String?         @db.VarChar(15)
+  alamat_rw      String?         @db.VarChar(15)
+  kode_pos       String?         @db.VarChar(10)
+  role           String          @db.VarChar(15)
+  kasir_operator kasir_operator?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model detail_pesanan {
+  id_detail_pesanan String  @id @db.VarChar(10)
+  id_pesanan        String  @db.VarChar(10)
+  id_barang         String  @db.VarChar(10)
+  jumlah            Int
+  harga_satuan      Decimal @db.Decimal(12, 2)
+  subtotal          Decimal @db.Decimal(12, 2)
+  barang            barang  @relation(fields: [id_barang], references: [id_barang])
+  pesanan           pesanan @relation(fields: [id_pesanan], references: [id_pesanan])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model detail_transaksi {
+  id_detail_transaksi String    @id @db.VarChar(10)
+  id_transaksi        String    @db.VarChar(10)
+  id_barang           String    @db.VarChar(10)
+  jumlah              Int
+  harga_satuan        Decimal   @db.Decimal(12, 2)
+  subtotal            Decimal   @db.Decimal(12, 2)
+  barang              barang    @relation(fields: [id_barang], references: [id_barang])
+  transaksi           transaksi @relation(fields: [id_transaksi], references: [id_transaksi])
+}
+
+model kasir {
+  id_kasir     String      @id @db.VarChar(10)
+  id_akun      String      @db.VarChar(10)
+  username     String      @db.VarChar(50)
+  password     String      @db.VarChar(100)
+  nama_lengkap String      @db.VarChar(100)
+  no_telepon   String      @db.VarChar(20)
+  email        String      @db.VarChar(100)
+  alamat_jalan String      @db.VarChar(150)
+  alamat_rt    String      @db.VarChar(10)
+  alamat_rw    String      @db.VarChar(10)
+  kode_pos     String      @db.VarChar(10)
+  akun         akun        @relation(fields: [id_akun], references: [id_akun])
+  struk        struk[]
+  transaksi    transaksi[]
+}
+
+model kasir_operator {
+  id_kasir  String    @id @db.VarChar(15)
+  id_akun   String    @unique @db.VarChar(15)
+  data_akun data_akun @relation(fields: [id_akun], references: [id_akun])
+}
+
+model kode_pos {
+  kode_pos    String @id @db.VarChar(10)
+  alamat_desa String @db.VarChar(100)
+  alamat      alamat @relation(fields: [alamat_desa], references: [alamat_desa])
+}
+
+model laporan {
+  id_laporan     String   @id @db.VarChar(10)
+  id_owner       String   @db.VarChar(10)
+  id_admin       String   @db.VarChar(10)
+  jenis_laporan  String   @db.VarChar(50)
+  periode_awal   DateTime @db.Timestamp(6)
+  periode_akhir  DateTime @db.Timestamp(6)
+  tanggal_dibuat DateTime @default(now()) @db.Timestamp(6)
+  status_arsip   String   @db.VarChar(30)
+  admin          admin    @relation(fields: [id_admin], references: [id_admin])
+  owner          owner    @relation(fields: [id_owner], references: [id_owner])
+}
+
+model lokasi {
+  id_lokasi      String         @id @db.VarChar(10)
+  id_pengelola   String         @db.VarChar(10)
+  nama_lokasi    String         @db.VarChar(100)
+  jenis_lokasi   String         @db.VarChar(50)
+  pengelola_toko pengelola_toko @relation(fields: [id_pengelola], references: [id_pengelola])
+  stok           stok[]
+}
+
+model notifikasi_stok {
+  id_notifikasi      String         @id @db.VarChar(10)
+  id_stok            String         @db.VarChar(10)
+  id_pengelola       String         @db.VarChar(10)
+  pesan              String
+  tanggal_notifikasi DateTime       @default(now()) @db.Timestamp(6)
+  status             String         @db.VarChar(30)
+  pengelola_toko     pengelola_toko @relation(fields: [id_pengelola], references: [id_pengelola])
+  stok               stok           @relation(fields: [id_stok], references: [id_stok])
+}
+
+model owner {
+  id_owner     String    @id @db.VarChar(10)
+  id_akun      String    @db.VarChar(10)
+  username     String    @db.VarChar(50)
+  password     String    @db.VarChar(100)
+  nama_lengkap String    @db.VarChar(100)
+  no_telepon   String    @db.VarChar(20)
+  email        String    @db.VarChar(100)
+  alamat_jalan String    @db.VarChar(150)
+  alamat_rt    String    @db.VarChar(10)
+  alamat_rw    String    @db.VarChar(10)
+  kode_pos     String    @db.VarChar(10)
+  laporan      laporan[]
+  akun         akun      @relation(fields: [id_akun], references: [id_akun])
+}
+
+model pelanggan {
+  id_pelanggan String       @id @db.VarChar(10)
+  id_akun      String       @db.VarChar(10)
+  username     String       @db.VarChar(50)
+  password     String       @db.VarChar(100)
+  nama_lengkap String       @db.VarChar(100)
+  no_telepon   String       @db.VarChar(20)
+  email        String       @db.VarChar(100)
+  alamat_jalan String       @db.VarChar(150)
+  alamat_rt    String       @db.VarChar(10)
+  alamat_rw    String       @db.VarChar(10)
+  kode_pos     String       @db.VarChar(10)
+  akun         akun         @relation(fields: [id_akun], references: [id_akun])
+  pesanan      pesanan[]
+  registrasi   registrasi[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pembayaran {
+  id_pembayaran      String    @id @db.VarChar(10)
+  id_transaksi       String    @db.VarChar(10)
+  tanggal_pembayaran DateTime  @default(now()) @db.Timestamp(6)
+  metode_pembayaran  String    @db.VarChar(50)
+  jumlah_pembayaran  Decimal   @db.Decimal(12, 2)
+  bukti_pembayaran   String?   @db.VarChar(255)
+  status_verifikasi  String    @db.VarChar(30)
+  transaksi          transaksi @relation(fields: [id_transaksi], references: [id_transaksi])
+}
+
+model pengelola_toko {
+  id_pengelola    String            @id @db.VarChar(10)
+  id_akun         String            @db.VarChar(10)
+  username        String            @db.VarChar(50)
+  password        String            @db.VarChar(100)
+  nama_lengkap    String            @db.VarChar(100)
+  no_telepon      String            @db.VarChar(20)
+  email           String            @db.VarChar(100)
+  alamat_jalan    String            @db.VarChar(150)
+  alamat_rt       String            @db.VarChar(10)
+  alamat_rw       String            @db.VarChar(10)
+  kode_pos        String            @db.VarChar(10)
+  lokasi          lokasi[]
+  notifikasi_stok notifikasi_stok[]
+  akun            akun              @relation(fields: [id_akun], references: [id_akun])
+  riwayat_stok    riwayat_stok[]
+}
+
+model pengguna {
+  id_pengguna  String @id @db.VarChar(10)
+  id_akun      String @db.VarChar(10)
+  username     String @db.VarChar(50)
+  password     String @db.VarChar(100)
+  nama_lengkap String @db.VarChar(100)
+  no_telepon   String @db.VarChar(20)
+  email        String @db.VarChar(100)
+  alamat_jalan String @db.VarChar(150)
+  alamat_rt    String @db.VarChar(10)
+  alamat_rw    String @db.VarChar(10)
+  kode_pos     String @db.VarChar(10)
+  akun         akun   @relation(fields: [id_akun], references: [id_akun])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pesanan {
+  id_pesanan      String           @id @db.VarChar(10)
+  id_pelanggan    String           @db.VarChar(10)
+  tanggal_pesanan DateTime         @default(now()) @db.Timestamp(6)
+  status_pesanan  String           @db.VarChar(30)
+  total_harga     Decimal          @db.Decimal(12, 2)
+  detail_pesanan  detail_pesanan[]
+  pelanggan       pelanggan        @relation(fields: [id_pelanggan], references: [id_pelanggan])
+  transaksi       transaksi[]
+}
+
+model registrasi {
+  id_registrasi      String    @id @db.VarChar(10)
+  id_pelanggan       String    @db.VarChar(10)
+  tanggal_registrasi DateTime  @default(now()) @db.Timestamp(6)
+  status_registrasi  String    @db.VarChar(30)
+  pelanggan          pelanggan @relation(fields: [id_pelanggan], references: [id_pelanggan])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model riwayat_stok {
+  id_riwayat      String         @id @db.VarChar(10)
+  id_stok         String         @db.VarChar(10)
+  id_pengelola    String         @db.VarChar(10)
+  jenis_riwayat   String         @db.VarChar(30)
+  jumlah          Int
+  tanggal_riwayat DateTime       @default(now()) @db.Timestamp(6)
+  keterangan      String?
+  pengelola_toko  pengelola_toko @relation(fields: [id_pengelola], references: [id_pengelola])
+  stok            stok           @relation(fields: [id_stok], references: [id_stok])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model stok {
+  id_stok         String            @id @db.VarChar(10)
+  id_lokasi       String            @db.VarChar(10)
+  id_barang       String            @db.VarChar(10)
+  jumlah_stok     Int
+  tanggal_update  DateTime          @default(now()) @db.Timestamp(6)
+  notifikasi_stok notifikasi_stok[]
+  riwayat_stok    riwayat_stok[]
+  barang          barang            @relation(fields: [id_barang], references: [id_barang])
+  lokasi          lokasi            @relation(fields: [id_lokasi], references: [id_lokasi])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model struk {
+  id_struk      String    @id @db.VarChar(10)
+  id_transaksi  String    @db.VarChar(10)
+  id_kasir      String    @db.VarChar(10)
+  tanggal_cetak DateTime  @default(now()) @db.Timestamp(6)
+  total_bayar   Decimal   @db.Decimal(12, 2)
+  kasir         kasir     @relation(fields: [id_kasir], references: [id_kasir])
+  transaksi     transaksi @relation(fields: [id_transaksi], references: [id_transaksi])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model transaksi {
+  id_transaksi      String             @id @db.VarChar(10)
+  id_kasir          String             @db.VarChar(10)
+  id_pesanan        String             @db.VarChar(10)
+  tanggal_transaksi DateTime           @default(now()) @db.Timestamp(6)
+  total_harga       Decimal            @db.Decimal(12, 2)
+  status_transaksi  String             @db.VarChar(30)
+  detail_transaksi  detail_transaksi[]
+  pembayaran        pembayaran[]
+  struk             struk[]
+  kasir             kasir              @relation(fields: [id_kasir], references: [id_kasir])
+  pesanan           pesanan            @relation(fields: [id_pesanan], references: [id_pesanan])
 }
