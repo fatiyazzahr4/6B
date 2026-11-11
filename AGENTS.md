@@ -122,3 +122,9 @@ There is currently no project `Dockerfile` or Docker Compose file. Docker does n
 ## Recent change
 
 The `/transaksi` page now reads and creates records through `/api/transaksi`. An additive `transaksi_manual` model was approved, pushed to the local database, and seeded with five idempotent examples. The page redirects unauthenticated visitors to `/beranda`; Admin/Kasir can create records and Owner can read only.
+
+## Neon and Vercel
+
+The approved Neon project is `toko-farid-6b` in `aws-ap-southeast-1` (Singapore). Keep the pooled Neon URL in runtime `DATABASE_URL` and the direct Neon URL in `DIRECT_URL`; both must use `sslmode=require`. Preserve the original local PostgreSQL URL as `DATABASE_URL_LOCAL`. `prisma7.config.ts` prefers `DIRECT_URL` for schema operations and falls back to `DATABASE_URL` for local development.
+
+`database/neon-seed.sql` is an idempotent SQL backup of the five sample transaction rows. The matching Prisma seed is `npx prisma db seed`. On Vercel, configure `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, and `DB_SSL` for Production, Preview, and Development without committing or printing their values. Use the pooled URL for runtime and direct URL for Prisma schema changes.

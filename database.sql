@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS pembayaran CASCADE;
 DROP TABLE IF EXISTS detail_transaksi CASCADE;
 DROP TABLE IF EXISTS transaksi CASCADE;
+DROP TABLE IF EXISTS struk CASCADE;
 DROP TABLE IF EXISTS detail_pesanan CASCADE;
 DROP TABLE IF EXISTS pesanan CASCADE;
 DROP TABLE IF EXISTS riwayat_stok CASCADE;
@@ -9,14 +10,18 @@ DROP TABLE IF EXISTS stok CASCADE;
 DROP TABLE IF EXISTS lokasi CASCADE;
 DROP TABLE IF EXISTS barang CASCADE;
 DROP TABLE IF EXISTS registrasi CASCADE;
-DROP TABLE IF EXISTS pengguna CASCADE;
 DROP TABLE IF EXISTS pelanggan CASCADE;
+DROP TABLE IF EXISTS pengguna CASCADE;
+DROP TABLE IF EXISTS pengelola_toko CASCADE;
+DROP TABLE IF EXISTS kasir_operator CASCADE;
 DROP TABLE IF EXISTS kasir CASCADE;
 DROP TABLE IF EXISTS admin CASCADE;
 DROP TABLE IF EXISTS owner CASCADE;
-DROP TABLE IF EXISTS pengelola_toko CASCADE;
+DROP TABLE IF EXISTS laporan CASCADE;
+DROP TABLE IF EXISTS backup_data CASCADE;
 DROP TABLE IF EXISTS kode_pos CASCADE;
 DROP TABLE IF EXISTS alamat CASCADE;
+DROP TABLE IF EXISTS data_akun CASCADE;
 DROP TABLE IF EXISTS akun CASCADE;
 
 CREATE TABLE akun (
@@ -31,6 +36,20 @@ CREATE TABLE akun (
     alamat_rw VARCHAR(10) NOT NULL,
     kode_pos VARCHAR(10) NOT NULL,
     role VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE data_akun (
+    id_akun VARCHAR(15) PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(200) NOT NULL,
+    nama_lengkap VARCHAR(100) NOT NULL,
+    nomor_telepon VARCHAR(15) NOT NULL,
+    alamat_jalan VARCHAR(100) NOT NULL,
+    alamat_rt VARCHAR(15),
+    alamat_rw VARCHAR(15),
+    kode_pos VARCHAR(10),
+    role VARCHAR(15) NOT NULL
 );
 
 CREATE TABLE alamat (
@@ -143,6 +162,13 @@ CREATE TABLE kasir (
         ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
+CREATE TABLE kasir_operator (
+    id_kasir VARCHAR(15) PRIMARY KEY,
+    id_akun VARCHAR(15) NOT NULL UNIQUE,
+    FOREIGN KEY (id_akun) REFERENCES data_akun(id_akun)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
 CREATE TABLE registrasi (
     id_registrasi VARCHAR(10) PRIMARY KEY,
     id_pelanggan VARCHAR(10) NOT NULL,
@@ -235,6 +261,7 @@ CREATE TABLE detail_pesanan (
         ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
+CREATE TABLE transaksi (
     id_transaksi VARCHAR(10) PRIMARY KEY,
     id_kasir VARCHAR(10) NOT NULL,
     id_pesanan VARCHAR(10) NOT NULL,
@@ -300,8 +327,8 @@ CREATE TABLE laporan (
 );
 
 CREATE TABLE backup_data (
-    id_backup VARCHAR(10) PRIMARY KEY,
-    id_admin VARCHAR(10) NOT NULL,
+    id_backup VARCHAR(15) PRIMARY KEY,
+    id_admin VARCHAR(15) NOT NULL,
     tanggal_backup TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     nama_file VARCHAR(150) NOT NULL,
     status VARCHAR(30) NOT NULL,
@@ -310,9 +337,14 @@ CREATE TABLE backup_data (
 );
 
 INSERT INTO akun (id_akun, username, password, nama_lengkap, no_telepon, email, alamat_jalan, alamat_rt, alamat_rw, kode_pos, role)
-VALUES 
+VALUES
 ('A0001', 'farrel.alqodri', 'pwd001', 'Muhammad Farrel Alqodri', '081234567801', 'farrel.alqodri@gmail.com', 'Jl. Limau Manis No. 12', 'RT 01', 'RW 02', '25163', 'Pelanggan'),
 ('A0008', 'syafmila.wiradhika', 'ad-0001', 'Syafmila Wiradhika', '081234567813', 'syafmila.wiradhika@gmail.com', 'Jl. Gajah Mada No. 4', 'RT 03', 'RW 01', '25171', 'Admin');
+
+INSERT INTO data_akun (id_akun, username, email, password, nama_lengkap, nomor_telepon, alamat_jalan, alamat_rt, alamat_rw, kode_pos, role)
+VALUES
+('A0001', 'farrel.alqodri', 'farrel.alqodri@gmail.com', 'pwd001', 'Muhammad Farrel Alqodri', '081234567801', 'Jl. Limau Manis No. 12', '01', '02', '25163', 'Pelanggan'),
+('A0008', 'syafmila.wiradhika', 'syafmila.wiradhika@gmail.com', 'ad-0001', 'Syafmila Wiradhika', '081234567813', 'Jl. Gajah Mada No. 4', '03', '01', '25171', 'Admin');
 
 INSERT INTO alamat (alamat_desa, alamat_kecamatan, alamat_kabupaten, alamat_provinsi)
 VALUES ('Limau Manis', 'Pauh', 'Kota Padang', 'Sumatera Barat');
@@ -322,3 +354,18 @@ VALUES ('25163', 'Limau Manis');
 
 INSERT INTO pelanggan (id_pelanggan, id_akun, username, password, nama_lengkap, no_telepon, email, alamat_jalan, alamat_rt, alamat_rw, kode_pos)
 VALUES ('PL0001', 'A0001', 'farrel.alqodri', 'pwd001', 'Muhammad Farrel Alqodri', '081234567801', 'farrel.alqodri@gmail.com', 'Jl. Limau Manis No. 12', 'RT 01', 'RW 02', '25163');
+
+INSERT INTO admin (id_admin, id_akun, username, password, nama_lengkap, no_telepon, email, alamat_jalan, alamat_rt, alamat_rw, kode_pos)
+VALUES ('AD0001', 'A0008', 'syafmila.wiradhika', 'ad-0001', 'Syafmila Wiradhika', '081234567813', 'syafmila.wiradhika@gmail.com', 'Jl. Gajah Mada No. 4', 'RT 03', 'RW 01', '25171');
+
+INSERT INTO kasir_operator (id_kasir, id_akun)
+VALUES ('KS0001', 'A0008');
+
+SELECT * FROM akun;
+SELECT * FROM data_akun;
+SELECT * FROM alamat;
+SELECT * FROM kode_pos;
+SELECT * FROM pelanggan;
+SELECT * FROM pengguna;
+SELECT * FROM pengelola_toko;
+SELECT * FROM kasir_operator;

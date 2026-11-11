@@ -1,0 +1,1764 @@
+.pengelola-shell,
+.pengelola-login-page {
+  --pengelola-green: #178647;
+  --pengelola-green-dark: #116d38;
+  --pengelola-green-soft: #e9f6ed;
+  --pengelola-ink: #223b31;
+  --pengelola-muted: #78867f;
+  --pengelola-border: #e6ebe7;
+  --pengelola-bg: #f5f7f5;
+  min-height: 100vh;
+  color: var(--pengelola-ink);
+  font-family: var(--font-display);
+}
+
+.pengelola-shell {
+  display: flex;
+  background: var(--pengelola-bg);
+}
+
+.pengelola-sidebar {
+  position: fixed;
+  z-index: 20;
+  inset: 0 auto 0 0;
+  display: flex;
+  width: 254px;
+  flex-direction: column;
+  padding: 27px 17px 20px;
+  color: #fff;
+  background: linear-gradient(160deg, #14743b, #198d4a 62%, #14783e);
+  box-shadow: 4px 0 20px rgb(22 80 46 / 8%);
+}
+
+.pengelola-brand,
+.pengelola-login-brand {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 11px;
+  color: inherit;
+}
+
+.pengelola-brand img,
+.pengelola-login-brand img {
+  border-radius: 50%;
+  background: #fff;
+  object-fit: contain;
+}
+
+.pengelola-brand > span,
+.pengelola-login-brand > span {
+  display: grid;
+  gap: 3px;
+}
+
+.pengelola-brand strong,
+.pengelola-login-brand strong {
+  font-size: 17px;
+  font-weight: 750;
+}
+
+.pengelola-brand small,
+.pengelola-login-brand small {
+  font-size: 11px;
+  opacity: .8;
+}
+
+.pengelola-user-card {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 31px 0 30px;
+  border: 1px solid rgb(255 255 255 / 17%);
+  border-radius: 11px;
+  padding: 12px 10px;
+  background: rgb(255 255 255 / 9%);
+}
+
+.pengelola-user-card > span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.pengelola-user-card strong {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pengelola-user-card small {
+  font-size: 11px;
+  opacity: .76;
+}
+
+.pengelola-avatar-small,
+.pengelola-avatar-large {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--pengelola-green-dark);
+  background: #e7f7ec;
+  font-weight: 750;
+}
+
+.pengelola-avatar-small {
+  width: 39px;
+  height: 39px;
+  font-size: 13px;
+}
+
+.pengelola-nav-label {
+  margin: 0 0 10px 9px;
+  color: rgb(255 255 255 / 62%);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.15px;
+}
+
+.pengelola-navigation {
+  display: grid;
+  gap: 6px;
+}
+
+.pengelola-navigation a,
+.pengelola-logout,
+.pengelola-mobile-logout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  border-radius: 8px;
+  color: rgb(255 255 255 / 86%);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.pengelola-navigation a {
+  min-height: 43px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.pengelola-navigation a svg,
+.pengelola-logout svg,
+.pengelola-mobile-logout svg {
+  width: 18px;
+  height: 18px;
+}
+
+.pengelola-navigation a:hover,
+.pengelola-logout:hover,
+.pengelola-mobile-logout:hover {
+  color: #fff;
+  background: rgb(255 255 255 / 12%);
+}
+
+.pengelola-navigation a.is-active {
+  color: #176f39;
+  background: #fff;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgb(15 80 39 / 12%);
+}
+
+.pengelola-logout {
+  min-height: 43px;
+  margin-top: auto;
+  padding: 0 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.pengelola-logout:disabled,
+.pengelola-mobile-logout:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+.pengelola-main {
+  width: calc(100% - 254px);
+  min-width: 0;
+  min-height: 100vh;
+  margin-left: 254px;
+}
+
+.pengelola-page {
+  width: min(100%, 1500px);
+  margin: 0 auto;
+  padding: 31px clamp(22px, 3.2vw, 48px) 55px;
+}
+
+.pengelola-page-heading {
+  position: relative;
+  display: flex;
+  min-height: 132px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  border-radius: 13px;
+  padding: 27px 31px;
+  color: #fff;
+  background:
+    radial-gradient(ellipse at 86% 12%, rgb(255 255 255 / 15%), transparent 34%),
+    radial-gradient(ellipse at 14% 120%, rgb(9 91 42 / 40%), transparent 50%),
+    linear-gradient(115deg, #188543, #229950 54%, #14743d);
+  box-shadow: 0 8px 18px rgb(30 102 58 / 12%);
+}
+
+.pengelola-page-heading::after {
+  position: absolute;
+  top: -50px;
+  right: 4%;
+  width: 240px;
+  height: 240px;
+  border: 1px solid rgb(255 255 255 / 11%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 28px rgb(255 255 255 / 4%), 0 0 0 64px rgb(255 255 255 / 3%);
+  content: "";
+  pointer-events: none;
+}
+
+.pengelola-page-heading > div {
+  position: relative;
+  z-index: 1;
+}
+
+.pengelola-page-heading h1 {
+  margin: 0 0 8px;
+  font-size: clamp(24px, 2.4vw, 31px);
+  font-weight: 750;
+  letter-spacing: -.6px;
+}
+
+.pengelola-page-heading p {
+  margin: 0;
+  color: rgb(255 255 255 / 83%);
+  font-size: 13px;
+}
+
+.pengelola-white-button,
+.pengelola-outline-button,
+.pengelola-primary-button,
+.pengelola-danger-button,
+.pengelola-restock-button,
+.pengelola-icon-button {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  min-height: 39px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 0 14px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.pengelola-white-button {
+  color: #176f39;
+  background: #fff;
+  box-shadow: 0 4px 12px rgb(16 77 40 / 14%);
+}
+
+.pengelola-white-button:hover {
+  background: #f1fff5;
+  transform: translateY(-1px);
+}
+
+.pengelola-white-button:disabled,
+.pengelola-primary-button:disabled,
+.pengelola-danger-button:disabled,
+.pengelola-restock-button:disabled {
+  cursor: wait;
+  opacity: .58;
+}
+
+.pengelola-white-button svg,
+.pengelola-outline-button svg,
+.pengelola-primary-button svg,
+.pengelola-restock-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.pengelola-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.pengelola-summary-card {
+  display: flex;
+  min-height: 109px;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--pengelola-border);
+  border-radius: 11px;
+  padding: 18px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgb(32 58 42 / 3%);
+}
+
+.pengelola-summary-card > span,
+.pengelola-profile-info > span {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 11px;
+  color: #20864b;
+  background: #e9f6ed;
+}
+
+.pengelola-summary-card > span svg,
+.pengelola-profile-info > span svg {
+  width: 21px;
+  height: 21px;
+}
+
+.pengelola-summary-card.is-warning > span {
+  color: #bc8532;
+  background: #fff5e3;
+}
+
+.pengelola-summary-card.is-blue > span {
+  color: #4680bd;
+  background: #eaf3ff;
+}
+
+.pengelola-summary-card > div {
+  display: grid;
+  gap: 7px;
+}
+
+.pengelola-summary-card small {
+  color: var(--pengelola-muted);
+  font-size: 11px;
+}
+
+.pengelola-summary-card strong {
+  color: #263d32;
+  font-size: 23px;
+}
+
+.pengelola-panel,
+.pengelola-profile-details {
+  margin-bottom: 20px;
+  border: 1px solid var(--pengelola-border);
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgb(32 58 42 / 3%);
+}
+
+.pengelola-panel {
+  overflow: hidden;
+  padding: 22px 22px 8px;
+}
+
+.pengelola-section-heading {
+  display: flex;
+  min-height: 48px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.pengelola-section-heading h2 {
+  margin: 0 0 6px;
+  color: #273e33;
+  font-size: 16px;
+  font-weight: 720;
+}
+
+.pengelola-section-heading p {
+  margin: 0;
+  color: var(--pengelola-muted);
+  font-size: 12px;
+}
+
+.pengelola-outline-button {
+  border-color: #dce8df;
+  color: #33734a;
+  background: #fff;
+  white-space: nowrap;
+}
+
+.pengelola-outline-button:hover {
+  border-color: #98c7a6;
+  background: #f5fbf6;
+}
+
+.pengelola-primary-button {
+  color: #fff;
+  background: var(--pengelola-green);
+}
+
+.pengelola-primary-button:hover {
+  background: var(--pengelola-green-dark);
+}
+
+.pengelola-danger-button {
+  color: #fff;
+  background: #ca4c45;
+}
+
+.pengelola-danger-button:hover {
+  background: #af3932;
+}
+
+.pengelola-icon-button {
+  width: 38px;
+  min-height: 38px;
+  padding: 0;
+  border-color: var(--pengelola-border);
+  color: #59806a;
+  background: #fff;
+}
+
+.pengelola-icon-button:hover {
+  background: #f1f8f3;
+}
+
+.pengelola-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-color: #bfcec3 #f2f5f2;
+  scrollbar-width: thin;
+}
+
+.pengelola-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #617169;
+  font-size: 11px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.pengelola-table th {
+  border-bottom: 1px solid #e8ede9;
+  padding: 12px 10px;
+  color: #849188;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .5px;
+}
+
+.pengelola-table td {
+  height: 58px;
+  border-bottom: 1px solid #eef1ee;
+  padding: 8px 10px;
+  vertical-align: middle;
+}
+
+.pengelola-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.pengelola-table .pengelola-id {
+  color: #73847a;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.pengelola-table .pengelola-item-name,
+.pengelola-strong {
+  color: #2e4638;
+  font-weight: 700;
+}
+
+.pengelola-product-image {
+  position: relative;
+  display: grid;
+  width: 42px;
+  height: 42px;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid #edf0ed;
+  border-radius: 7px;
+  color: #77a486;
+  background: #f3f7f3;
+}
+
+.pengelola-product-image svg {
+  width: 19px;
+  height: 19px;
+}
+
+.pengelola-product-image img {
+  object-fit: contain;
+  padding: 3px;
+}
+
+.pengelola-status {
+  display: inline-flex;
+  min-height: 23px;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 9px;
+  color: #a57930;
+  background: #fff4df;
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pengelola-status.is-good {
+  color: #267744;
+  background: #e8f6eb;
+}
+
+.is-low {
+  color: #c24c42 !important;
+  font-weight: 750;
+}
+
+.pengelola-empty {
+  height: 90px !important;
+  color: #8a968e;
+  text-align: center;
+  white-space: normal;
+}
+
+.pengelola-empty-note,
+.pengelola-loading-note {
+  padding: 20px;
+  color: var(--pengelola-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.pengelola-loading-note {
+  margin: 20px;
+}
+
+.pengelola-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pengelola-action {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0 7px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.pengelola-action svg {
+  width: 15px;
+  height: 15px;
+}
+
+.pengelola-action.edit {
+  border-color: #dbeade;
+  color: #38804e;
+  background: #f4faf5;
+}
+
+.pengelola-action.delete {
+  border-color: #f2dfdd;
+  color: #bf5149;
+  background: #fff8f7;
+}
+
+.pengelola-action.restock {
+  color: #fff;
+  background: #26884b;
+}
+
+.pengelola-action:hover {
+  filter: brightness(.97);
+}
+
+.pengelola-action:disabled {
+  cursor: wait;
+  opacity: .5;
+}
+
+.pengelola-location-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 21px;
+}
+
+.pengelola-location-card {
+  overflow: hidden;
+  border: 1px solid #dfece2;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgb(32 58 42 / 4%);
+}
+
+.pengelola-location-card > header {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 19px;
+  background: linear-gradient(120deg, #eaf7ed, #f8fcf8);
+}
+
+.pengelola-location-card.is-blue > header {
+  background: linear-gradient(120deg, #eaf3ff, #f7faff);
+}
+
+.pengelola-location-card > header > span {
+  display: grid;
+  width: 43px;
+  height: 43px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 11px;
+  color: #33824a;
+  background: #fff;
+}
+
+.pengelola-location-card.is-blue > header > span {
+  color: #477fb5;
+}
+
+.pengelola-location-card > header h2 {
+  margin: 0 0 5px;
+  color: #293f33;
+  font-size: 16px;
+}
+
+.pengelola-location-card > header p {
+  margin: 0;
+  color: #76847b;
+  font-size: 10px;
+}
+
+.pengelola-location-content {
+  padding: 17px 19px 15px;
+}
+
+.pengelola-location-content > strong {
+  display: block;
+  margin-bottom: 11px;
+  color: #47574d;
+  font-size: 11px;
+}
+
+.pengelola-location-items {
+  display: grid;
+  gap: 8px;
+}
+
+.pengelola-location-items > div {
+  display: grid;
+  grid-template-columns: 35px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 45px;
+  border-bottom: 1px solid #eff2ef;
+  color: #3d5144;
+  font-size: 11px;
+}
+
+.pengelola-location-items .pengelola-product-image {
+  width: 33px;
+  height: 33px;
+}
+
+.pengelola-location-items small {
+  color: #74837a;
+}
+
+.pengelola-location-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.pengelola-location-type {
+  display: inline-block;
+  border-radius: 99px;
+  padding: 5px 10px;
+  color: #297444;
+  background: #e9f6ec;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.pengelola-location-type.is-blue {
+  color: #477eb4;
+  background: #eaf3ff;
+}
+
+.pengelola-notification-list {
+  display: grid;
+  gap: 12px;
+}
+
+.pengelola-notification {
+  display: flex;
+  min-height: 91px;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--pengelola-border);
+  border-radius: 10px;
+  padding: 15px 17px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgb(32 58 42 / 3%);
+}
+
+.pengelola-notification.is-unread {
+  border-color: #d4e9d8;
+  background: #fcfffc;
+}
+
+.pengelola-notification-copy {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 7px;
+}
+
+.pengelola-notification-copy strong {
+  color: #364a3d;
+  font-size: 12px;
+}
+
+.pengelola-notification-copy small {
+  color: #859088;
+  font-size: 10px;
+}
+
+.pengelola-restock-button {
+  min-height: 33px;
+  color: #fff;
+  background: #20884b;
+}
+
+.pengelola-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  border: 1px solid #f1d5d1;
+  border-radius: 7px;
+  padding: 10px 12px;
+  color: #a4443c;
+  background: #fff8f7;
+  font-size: 12px;
+}
+
+.pengelola-error svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.pengelola-profile-layout {
+  display: grid;
+  grid-template-columns: minmax(230px, .75fr) minmax(0, 1.8fr);
+  align-items: start;
+  gap: 20px;
+}
+
+.pengelola-profile-card {
+  position: relative;
+  display: flex;
+  min-height: 313px;
+  align-items: center;
+  flex-direction: column;
+  border: 1px solid var(--pengelola-border);
+  border-radius: 11px;
+  padding: 0 22px 23px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgb(32 58 42 / 3%);
+  text-align: center;
+}
+
+.pengelola-profile-cover {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 98px;
+  border-radius: 11px 11px 0 0;
+  background:
+    radial-gradient(ellipse at 80% 10%, rgb(255 255 255 / 18%), transparent 35%),
+    linear-gradient(120deg, #188543, #299a50);
+}
+
+.pengelola-avatar-large {
+  position: relative;
+  z-index: 1;
+  width: 90px;
+  height: 90px;
+  margin: 51px 0 11px;
+  border: 5px solid #fff;
+  box-shadow: 0 3px 10px rgb(20 80 43 / 13%);
+  font-size: 26px;
+}
+
+.pengelola-profile-card h2 {
+  margin: 2px 0 5px;
+  font-size: 18px;
+}
+
+.pengelola-profile-card > p {
+  margin: 0 0 11px;
+  color: var(--pengelola-muted);
+  font-size: 12px;
+}
+
+.pengelola-profile-card .pengelola-primary-button,
+.pengelola-profile-card .pengelola-outline-button {
+  margin-top: 19px;
+}
+
+.pengelola-profile-details {
+  min-width: 0;
+  padding: 21px;
+}
+
+.pengelola-profile-details .pengelola-section-heading {
+  padding-bottom: 3px;
+  border-bottom: 1px solid #edf1ed;
+}
+
+.pengelola-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 18px;
+}
+
+.pengelola-profile-info {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 11px;
+  border-bottom: 1px solid #f0f3f0;
+  padding: 12px 0;
+}
+
+.pengelola-profile-info > span {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+}
+
+.pengelola-profile-info > span svg {
+  width: 17px;
+  height: 17px;
+}
+
+.pengelola-profile-info p {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  margin: 0;
+}
+
+.pengelola-profile-info small {
+  color: #829087;
+  font-size: 10px;
+}
+
+.pengelola-profile-info strong {
+  overflow-wrap: anywhere;
+  color: #3a4b40;
+  font-size: 11px;
+}
+
+.pengelola-profile-form,
+.pengelola-dialog-form {
+  display: grid;
+  gap: 14px;
+}
+
+.pengelola-profile-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pengelola-profile-form > label,
+.pengelola-dialog-form > label {
+  display: grid;
+  gap: 7px;
+  color: #4a5d50;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pengelola-profile-form input,
+.pengelola-dialog-form input,
+.pengelola-dialog-form select {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid #dce5de;
+  border-radius: 6px;
+  padding: 0 11px;
+  outline: 0;
+  color: #344a3c;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+}
+
+.pengelola-profile-form input:focus,
+.pengelola-dialog-form input:focus,
+.pengelola-dialog-form select:focus {
+  border-color: #60a973;
+  box-shadow: 0 0 0 3px rgb(31 136 72 / 10%);
+}
+
+.pengelola-profile-form > label:nth-child(6) {
+  grid-column: 1 / -1;
+}
+
+.pengelola-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 4px;
+}
+
+.pengelola-profile-form > .pengelola-error,
+.pengelola-profile-form > .pengelola-form-actions {
+  grid-column: 1 / -1;
+}
+
+.pengelola-modal-backdrop {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  overflow-y: auto;
+  place-items: center;
+  padding: 22px;
+  background: rgb(22 38 29 / 48%);
+}
+
+.pengelola-modal {
+  width: min(100%, 470px);
+  border: 1px solid #e3ebe5;
+  border-radius: 12px;
+  padding: 24px;
+  background: #fff;
+  box-shadow: 0 22px 70px rgb(15 37 22 / 24%);
+}
+
+.pengelola-modal > h2 {
+  margin: 0 0 19px;
+  color: #2a4233;
+  font-size: 19px;
+}
+
+.pengelola-modal > h2:empty {
+  margin: 0;
+}
+
+.pengelola-modal-close {
+  position: fixed;
+  z-index: 101;
+  top: max(14px, calc(50% - 260px));
+  left: calc(50% + min(235px, 43vw));
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: rgb(31 46 37 / 70%);
+  cursor: pointer;
+}
+
+.pengelola-modal-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.pengelola-dialog-form > p {
+  margin: 0;
+  color: #5c6e62;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.pengelola-feedback {
+  display: grid;
+  justify-items: center;
+  gap: 15px;
+  padding: 9px 5px 3px;
+  text-align: center;
+}
+
+.pengelola-feedback > span {
+  display: grid;
+  width: 59px;
+  height: 59px;
+  place-items: center;
+  border-radius: 50%;
+  color: #228348;
+  background: #e8f7ec;
+}
+
+.pengelola-feedback > span svg {
+  width: 27px;
+  height: 27px;
+}
+
+.pengelola-feedback h3 {
+  margin: 0 0 3px;
+  color: #304638;
+  font-size: 17px;
+}
+
+.pengelola-login-page {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: minmax(340px, .92fr) minmax(480px, 1.08fr);
+  background: #fff;
+}
+
+.pengelola-login-story {
+  position: relative;
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  padding: 33px clamp(30px, 5vw, 70px);
+  color: #fff;
+  background:
+    linear-gradient(135deg, rgb(9 83 39 / 91%), rgb(19 128 62 / 85%)),
+    url("/storefront/supermarket-about.jpg") center / cover;
+}
+
+.pengelola-login-copy {
+  width: min(100%, 500px);
+  margin: auto;
+  padding: 48px 0;
+}
+
+.pengelola-login-copy h1 {
+  margin: 0 0 15px;
+  font-size: clamp(34px, 4vw, 49px);
+  font-weight: 760;
+  letter-spacing: -1.2px;
+  line-height: 1.1;
+}
+
+.pengelola-login-copy > p {
+  margin: 0 0 29px;
+  color: rgb(255 255 255 / 86%);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.pengelola-login-copy ul {
+  display: grid;
+  gap: 17px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pengelola-login-copy li {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.pengelola-login-copy li > span {
+  display: grid;
+  width: 39px;
+  height: 39px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 12%);
+}
+
+.pengelola-login-copy li > span svg {
+  width: 19px;
+  height: 19px;
+}
+
+.pengelola-login-copy li div {
+  display: grid;
+  gap: 4px;
+}
+
+.pengelola-login-copy li strong {
+  font-size: 12px;
+}
+
+.pengelola-login-copy li small {
+  color: rgb(255 255 255 / 71%);
+  font-size: 10px;
+}
+
+.pengelola-back-home {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  color: rgb(255 255 255 / 89%);
+  font-size: 12px;
+}
+
+.pengelola-back-home:hover {
+  color: #fff;
+}
+
+.pengelola-back-home svg {
+  width: 17px;
+  height: 17px;
+}
+
+.pengelola-login-panel {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 38px;
+  background: #f8faf8;
+}
+
+.pengelola-login-card {
+  width: min(100%, 465px);
+  border: 1px solid #e6ebe7;
+  border-radius: 13px;
+  padding: 34px;
+  background: #fff;
+  box-shadow: 0 12px 42px rgb(33 62 43 / 8%);
+}
+
+.pengelola-login-card-head {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 27px;
+}
+
+.pengelola-login-card-head > span {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 12px;
+  color: #22864b;
+  background: #e9f6ed;
+}
+
+.pengelola-login-card-head h2 {
+  margin: 0 0 5px;
+  color: #293f33;
+  font-size: 19px;
+}
+
+.pengelola-login-card-head p {
+  margin: 0;
+  color: #849087;
+  font-size: 11px;
+}
+
+.pengelola-login-form {
+  display: grid;
+  gap: 9px;
+}
+
+.pengelola-login-form > label {
+  margin-top: 8px;
+  color: #46594c;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pengelola-login-input {
+  display: flex;
+  min-height: 45px;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #dfe7e0;
+  border-radius: 7px;
+  padding: 0 12px;
+  color: #8b9b90;
+}
+
+.pengelola-login-input:focus-within {
+  border-color: #69ab7b;
+  box-shadow: 0 0 0 3px rgb(31 136 72 / 9%);
+}
+
+.pengelola-login-input > svg {
+  width: 17px;
+  height: 17px;
+}
+
+.pengelola-login-input input {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  border: 0;
+  outline: 0;
+  color: #344a3c;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+}
+
+.pengelola-login-input input::placeholder {
+  color: #a7b0aa;
+}
+
+.pengelola-login-input button {
+  border: 0;
+  padding: 4px;
+  color: #86978b;
+  background: transparent;
+  cursor: pointer;
+}
+
+.pengelola-login-input button svg {
+  width: 17px;
+  height: 17px;
+}
+
+.pengelola-login-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 5px 0 10px;
+}
+
+.pengelola-login-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #637269;
+  font-size: 11px;
+}
+
+.pengelola-login-options input {
+  accent-color: var(--pengelola-green);
+}
+
+.pengelola-login-options button {
+  border: 0;
+  padding: 4px;
+  color: #218148;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pengelola-login-submit {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 7px;
+  color: #fff;
+  background: linear-gradient(110deg, #188443, #27964f);
+  box-shadow: 0 4px 10px rgb(24 132 67 / 17%);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pengelola-login-submit:hover {
+  background: var(--pengelola-green-dark);
+}
+
+.pengelola-login-submit:disabled {
+  cursor: wait;
+  opacity: .7;
+}
+
+.pengelola-login-submit svg {
+  width: 17px;
+  height: 17px;
+}
+
+.pengelola-login-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 12px;
+  border-radius: 7px;
+  padding: 11px;
+  color: #54705d;
+  background: #f0f8f2;
+}
+
+.pengelola-login-note > svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: #32864c;
+}
+
+.pengelola-login-note p {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  font-size: 10px;
+}
+
+.pengelola-login-note small {
+  color: #78867c;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.pengelola-mobile-header,
+.pengelola-mobile-navigation {
+  display: none;
+}
+
+.pengelola-loading {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  color: #617169;
+  background: #f5f7f5;
+  font: 14px var(--font-display);
+}
+
+@media (max-width: 1100px) {
+  .pengelola-sidebar {
+    width: 222px;
+    padding-right: 13px;
+    padding-left: 13px;
+  }
+
+  .pengelola-main {
+    width: calc(100% - 222px);
+    margin-left: 222px;
+  }
+
+  .pengelola-page {
+    padding-right: 22px;
+    padding-left: 22px;
+  }
+
+  .pengelola-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pengelola-location-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .pengelola-sidebar {
+    display: none;
+  }
+
+  .pengelola-main {
+    width: 100%;
+    margin-left: 0;
+    padding-bottom: 76px;
+  }
+
+  .pengelola-mobile-header {
+    position: sticky;
+    z-index: 25;
+    top: 0;
+    display: flex;
+    min-height: 62px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 1px solid #e5ebe6;
+    padding: 8px 17px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgb(24 53 34 / 4%);
+  }
+
+  .pengelola-mobile-header .pengelola-brand {
+    color: #293f33;
+  }
+
+  .pengelola-mobile-header .pengelola-brand strong {
+    font-size: 15px;
+  }
+
+  .pengelola-mobile-header .pengelola-brand small {
+    color: #748279;
+  }
+
+  .pengelola-mobile-logout {
+    min-height: 36px;
+    padding: 0 8px;
+    color: #36784b;
+    cursor: pointer;
+    font-size: 11px;
+  }
+
+  .pengelola-mobile-logout:hover {
+    color: #176c37;
+    background: #edf7ef;
+  }
+
+  .pengelola-mobile-navigation {
+    position: fixed;
+    z-index: 24;
+    inset: auto 0 0;
+    display: flex;
+    overflow-x: auto;
+    align-items: stretch;
+    justify-content: space-around;
+    gap: 2px;
+    border-top: 1px solid #e3eae4;
+    padding: 6px 5px max(6px, env(safe-area-inset-bottom));
+    background: #fff;
+    box-shadow: 0 -3px 12px rgb(30 53 38 / 6%);
+    scrollbar-width: none;
+  }
+
+  .pengelola-mobile-navigation::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pengelola-mobile-navigation a {
+    display: grid;
+    min-width: 67px;
+    min-height: 53px;
+    flex: 1 0 67px;
+    justify-items: center;
+    align-content: center;
+    gap: 4px;
+    border-radius: 8px;
+    color: #718078;
+    font-size: 9px;
+    text-align: center;
+  }
+
+  .pengelola-mobile-navigation a svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .pengelola-mobile-navigation a.is-active {
+    color: #20834a;
+    background: #f0f8f2;
+    font-weight: 700;
+  }
+
+  .pengelola-page {
+    padding: 18px 14px 35px;
+  }
+
+  .pengelola-page-heading {
+    min-height: 113px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    padding: 20px 17px;
+  }
+
+  .pengelola-page-heading h1 {
+    font-size: 23px;
+  }
+
+  .pengelola-page-heading p {
+    max-width: 210px;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .pengelola-page-heading .pengelola-white-button {
+    min-height: 35px;
+    gap: 5px;
+    padding: 0 9px;
+    font-size: 10px;
+  }
+
+  .pengelola-page-heading .pengelola-white-button svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .pengelola-summary-grid {
+    gap: 9px;
+    margin-bottom: 14px;
+  }
+
+  .pengelola-summary-card {
+    min-height: 83px;
+    gap: 9px;
+    padding: 11px;
+  }
+
+  .pengelola-summary-card > span {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+  }
+
+  .pengelola-summary-card > span svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .pengelola-summary-card small {
+    font-size: 9px;
+    line-height: 1.35;
+  }
+
+  .pengelola-summary-card strong {
+    font-size: 19px;
+  }
+
+  .pengelola-panel {
+    margin-bottom: 14px;
+    padding: 16px 13px 5px;
+  }
+
+  .pengelola-section-heading h2 {
+    font-size: 14px;
+  }
+
+  .pengelola-section-heading p {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  .pengelola-section-heading .pengelola-outline-button {
+    min-height: 32px;
+    padding: 0 8px;
+    font-size: 9px;
+  }
+
+  .pengelola-table {
+    min-width: 680px;
+  }
+
+  .pengelola-location-cards {
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .pengelola-location-card > header {
+    padding: 15px;
+  }
+
+  .pengelola-location-content {
+    padding: 14px;
+  }
+
+  .pengelola-notification {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 9px;
+    padding: 12px;
+  }
+
+  .pengelola-notification .pengelola-product-image {
+    width: 38px;
+    height: 38px;
+  }
+
+  .pengelola-notification-copy strong {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  .pengelola-notification-copy small {
+    font-size: 9px;
+    line-height: 1.4;
+  }
+
+  .pengelola-notification > .pengelola-status {
+    grid-column: 2;
+    width: fit-content;
+  }
+
+  .pengelola-notification > .pengelola-action,
+  .pengelola-notification > .pengelola-restock-button {
+    grid-column: 3;
+  }
+
+  .pengelola-notification > .pengelola-action {
+    grid-row: 1;
+  }
+
+  .pengelola-notification > .pengelola-restock-button {
+    grid-row: 2;
+  }
+
+  .pengelola-notification > .pengelola-action span {
+    display: none;
+  }
+
+  .pengelola-restock-button {
+    min-height: 30px;
+    padding: 0 10px;
+    font-size: 10px;
+  }
+
+  .pengelola-profile-layout {
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+
+  .pengelola-profile-card {
+    min-height: 272px;
+  }
+
+  .pengelola-profile-details {
+    padding: 16px 13px;
+  }
+
+  .pengelola-profile-grid {
+    gap: 3px 9px;
+  }
+
+  .pengelola-profile-info {
+    gap: 7px;
+  }
+
+  .pengelola-profile-info > span {
+    width: 31px;
+    height: 31px;
+  }
+
+  .pengelola-profile-info small {
+    font-size: 9px;
+  }
+
+  .pengelola-profile-info strong {
+    font-size: 10px;
+  }
+
+  .pengelola-login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .pengelola-login-story {
+    min-height: auto;
+    padding: 18px 20px 20px;
+  }
+
+  .pengelola-login-copy {
+    width: 100%;
+    padding: 32px 0 20px;
+  }
+
+  .pengelola-login-copy h1 {
+    margin-bottom: 9px;
+    font-size: 29px;
+  }
+
+  .pengelola-login-copy > p {
+    margin-bottom: 16px;
+    font-size: 11px;
+  }
+
+  .pengelola-login-copy ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 11px;
+  }
+
+  .pengelola-login-copy li {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .pengelola-login-copy li > span {
+    width: 31px;
+    height: 31px;
+  }
+
+  .pengelola-login-copy li > span svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .pengelola-login-copy li strong {
+    font-size: 10px;
+    line-height: 1.3;
+  }
+
+  .pengelola-login-copy li small {
+    display: none;
+  }
+
+  .pengelola-back-home {
+    font-size: 10px;
+  }
+
+  .pengelola-login-panel {
+    min-height: auto;
+    padding: 20px 14px 35px;
+  }
+
+  .pengelola-login-card {
+    padding: 23px 19px;
+  }
+
+  .pengelola-modal-backdrop {
+    padding: 16px;
+  }
+
+  .pengelola-modal {
+    padding: 20px 17px;
+  }
+
+  .pengelola-modal-close {
+    top: max(8px, calc(50% - 240px));
+    left: auto;
+    right: 8px;
+  }
+}
+
+@media (max-width: 390px) {
+  .pengelola-page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    gap: 9px;
+  }
+
+  .pengelola-page-heading .pengelola-white-button {
+    min-height: 30px;
+  }
+
+  .pengelola-summary-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pengelola-profile-form,
+  .pengelola-profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pengelola-profile-form > label:nth-child(6) {
+    grid-column: auto;
+  }
+}
