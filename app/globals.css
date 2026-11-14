@@ -6160,3 +6160,250 @@ svg {
     box-shadow: none;
   }
 }
+
+/* Logout controls on the customer portal are buttons (they call the logout API). */
+button.customer-logout,
+button.customer-profile-logout {
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+button.customer-logout {
+  width: 100%;
+}
+
+button.customer-profile-logout {
+  border: 1px solid #ed2b79;
+  background: transparent;
+}
+
+button.customer-logout:disabled,
+button.customer-profile-logout:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* Customer orders: status badge, row actions, detail panel, edit dialog. */
+.customer-order-id {
+  color: #e10f6b;
+  font-weight: 850;
+}
+
+.customer-order-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: #fff1d6;
+  color: #9a5b00;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.customer-order-status[data-status="selesai"],
+.customer-order-status[data-status="lunas"] {
+  background: #dcf8e6;
+  color: #12803f;
+}
+
+.customer-order-status[data-status="diproses"] {
+  background: #e0ecff;
+  color: #1d4ed8;
+}
+
+.customer-order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.customer-order-actions button {
+  border: 1px solid #f3c1d6;
+  border-radius: 999px;
+  padding: 4px 12px;
+  background: #fff;
+  color: #c01462;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.customer-order-actions button.is-danger {
+  border-color: #f5b5bd;
+  color: #d5233b;
+}
+
+.customer-orders-table tr[aria-selected="true"] td {
+  background: #fff5f9;
+}
+
+.customer-order-detail {
+  margin-top: 18px;
+}
+
+.customer-order-detail-items,
+.customer-order-edit ul {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.customer-order-detail-items li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 16px;
+  border-radius: 14px;
+  padding: 12px 16px;
+  background: #fff1f6;
+}
+
+.customer-order-detail-items small {
+  color: #8a8fa6;
+}
+
+.customer-order-detail-total {
+  margin: 14px 4px 0;
+  color: #e10f6b;
+  font-size: 22px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.customer-order-edit {
+  display: grid;
+  gap: 12px;
+  min-width: min(420px, 80vw);
+}
+
+.customer-order-edit li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.customer-order-edit li > span small {
+  display: block;
+  color: #8a8fa6;
+}
+
+.customer-order-edit li > button {
+  border: 0;
+  background: transparent;
+  color: #d5233b;
+  cursor: pointer;
+}
+
+.customer-order-edit li > button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.customer-order-edit-total {
+  margin: 0;
+  font-weight: 900;
+  text-align: right;
+}
+
+/* Figma "Pelanggan Pesanan Saya": pink header row, colored action pills, detail card. */
+.customer-page-orders .customer-orders-table thead tr {
+  background: #ffe3ee;
+}
+
+.customer-page-orders .customer-orders-table th {
+  border-bottom: 0;
+  padding: 12px 16px;
+  color: #c01462;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.customer-page-orders .customer-orders-table th:first-child {
+  border-radius: 12px 0 0 12px;
+}
+
+.customer-page-orders .customer-orders-table th:last-child {
+  border-radius: 0 12px 12px 0;
+}
+
+.customer-page-orders .customer-orders-table td {
+  border-bottom: 1px solid #eef0f6;
+  padding: 16px;
+  font-size: 12px;
+}
+
+.customer-order-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  padding: 6px 12px;
+  background: #e1ecff;
+  color: #1d4ed8;
+}
+
+.customer-order-actions button svg {
+  width: 12px;
+  height: 12px;
+}
+
+.customer-order-actions button.is-edit {
+  background: #ffe3ee;
+  color: #c01462;
+}
+
+.customer-order-actions button.is-danger {
+  background: #ffe1e1;
+  color: #d5233b;
+}
+
+.customer-page-orders .customer-order-detail {
+  margin-top: 28px;
+  border: 1px solid #c9ced9;
+  border-radius: 22px;
+  padding: 26px 22px;
+  box-shadow: none;
+}
+
+.customer-page-orders .customer-order-detail .customer-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.customer-page-orders .customer-order-detail .customer-section-heading h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.customer-order-detail-items li {
+  border: 1px solid #ffd9e6;
+  border-radius: 12px;
+  padding: 16px 18px;
+  background: #fff1f6;
+}
+
+.customer-order-detail-items li strong {
+  font-size: 13px;
+}
+
+.customer-order-detail-items li span {
+  color: #b3125f;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.customer-page-orders .customer-order-detail-total {
+  margin: 18px 0 0;
+  border-top: 1px solid #e9edf4;
+  padding: 22px 18px 0;
+  color: #b3125f;
+  font-size: 26px;
+}

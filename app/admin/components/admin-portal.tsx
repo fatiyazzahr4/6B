@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   createContext,
   useEffect,
+  useRef,
   useState,
   useContext,
   type FormEvent,
@@ -216,6 +217,7 @@ function formatCurrency(value: number) {
 }
 
 function useAdminQuery<T>(url: string, initialData: T) {
+  const pathname = usePathname();
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -241,7 +243,7 @@ function useAdminQuery<T>(url: string, initialData: T) {
     return () => {
       active = false;
     };
-  }, [url, reloadKey]);
+  }, [url, reloadKey, pathname]);
 
   return { data, loading, error, refresh: () => setReloadKey((key) => key + 1) };
 }
@@ -303,7 +305,9 @@ export function AdminPortalShell({
     setLoggingOut(true);
     try {
       await postAdmin({ action: "logout" });
+      setLoggingOut(false);
       router.replace("/admin/login");
+      router.refresh();
     } catch (error) {
       setLoggingOut(false);
       window.alert(error instanceof Error ? error.message : "Logout belum dapat diproses.");
@@ -358,8 +362,9 @@ export function AdminPortalShell({
   );
 }
 
-export function AdminLogin() {
+function AdminLoginContent() {
   const router = useRouter();
+  const timerRef = useRef<number | null>(null);
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -369,6 +374,23 @@ export function AdminLogin() {
   const [success, setSuccess] = useState(false);
   const [contact, setContact] = useState(false);
 
+  function clearTimer() {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }
+
+  function finishLogin() {
+    clearTimer();
+    setSuccess(false);
+    setBusy(false);
+    router.replace("/admin");
+    router.refresh();
+  }
+
+  useEffect(() => () => clearTimer(), []);
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
@@ -376,7 +398,8 @@ export function AdminLogin() {
     try {
       await postAdmin({ action: "login", identifier, password, remember });
       setSuccess(true);
-      window.setTimeout(() => router.replace("/admin"), 700);
+      clearTimer();
+      timerRef.current = window.setTimeout(() => finishLogin(), 1200);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Login Admin gagal.");
     } finally {
@@ -439,12 +462,25 @@ export function AdminLogin() {
           </form>
         </div>
       </section>
-      {success && <FeedbackModal message="Login Berhasil!" onClose={() => router.replace("/admin")} />}
+      {success && <FeedbackModal message="Login Berhasil!" onClose={finishLogin} />}
     </main>
   );
 }
 
+export function AdminLogin() {
+  const pathname = usePathname();
+  return <AdminLoginContent key={pathname} />;
+}
+
 function FeedbackModal({ message, onClose }: { message: string; onClose: () => void }) {
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
   return (
     <div className="admin-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section aria-label={message} aria-modal="true" className="admin-feedback-modal" role="dialog">
@@ -1072,10 +1108,11 @@ function ProfileDetail({ icon, label, value }: { icon: IconName; label: string; 
 }
 
 export function AdminPage({ page }: { page: AdminPageName }) {
-  if (page === "dashboard") return <DashboardPage />;
-  if (page === "accounts") return <AccountPage />;
-  if (page === "products") return <ProductPage />;
-  if (page === "reports") return <ReportPage />;
-  if (page === "backups") return <BackupPage />;
-  return <ProfilePage />;
+  const pathname = usePathname();
+  if (page === "dashboard") return <DashboardPage key={pathname} />;
+  if (page === "accounts") return <AccountPage key={pathname} />;
+  if (page === "products") return <ProductPage key={pathname} />;
+  if (page === "reports") return <ReportPage key={pathname} />;
+  if (page === "backups") return <BackupPage key={pathname} />;
+  return <ProfilePage key={pathname} />;
 }

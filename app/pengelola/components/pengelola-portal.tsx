@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   useEffect,
+  useRef,
   useState,
   type FormEvent,
   type ReactNode,
@@ -145,6 +146,7 @@ async function request<T>(body: Record<string, unknown>) {
 }
 
 function useData<T>(url: string, initialData: T) {
+  const pathname = usePathname();
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -163,7 +165,7 @@ function useData<T>(url: string, initialData: T) {
       })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [url, revision]);
+  }, [url, revision, pathname]);
 
   return {
     data,
@@ -203,6 +205,14 @@ function Modal({
   children: ReactNode;
   onClose: () => void;
 }) {
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
   return (
     <div className="pengelola-modal-backdrop" onMouseDown={(event) => {
       if (event.target === event.currentTarget) onClose();
@@ -247,7 +257,9 @@ export function PengelolaShell({
     setLoggingOut(true);
     try {
       await request({ action: "logout" });
+      setLoggingOut(false);
       router.replace("/pengelola/login");
+      router.refresh();
     } catch (cause) {
       setLoggingOut(false);
       window.alert(cause instanceof Error ? cause.message : "Logout belum dapat diproses.");
@@ -305,8 +317,9 @@ export function PengelolaShell({
   );
 }
 
-export function PengelolaLogin() {
+function PengelolaLoginContent() {
   const router = useRouter();
+  const timerRef = useRef<number | null>(null);
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -316,14 +329,33 @@ export function PengelolaLogin() {
   const [contact, setContact] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  function clearTimer() {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }
+
+  function finishLogin() {
+    clearTimer();
+    setSuccess(false);
+    setBusy(false);
+    router.replace("/pengelola");
+    router.refresh();
+  }
+
+  useEffect(() => () => clearTimer(), []);
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError("");
     try {
       await request({ action: "login", identifier, password, remember });
+      setBusy(false);
       setSuccess(true);
-      window.setTimeout(() => router.replace("/pengelola"), 800);
+      clearTimer();
+      timerRef.current = window.setTimeout(() => finishLogin(), 1200);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Login belum dapat diproses.");
       setBusy(false);
@@ -387,9 +419,14 @@ export function PengelolaLogin() {
           </form>
         </div>
       </section>
-      {success && <Feedback message="Login Berhasil!" onClose={() => router.replace("/pengelola")} />}
+      {success && <Feedback message="Login Berhasil!" onClose={finishLogin} />}
     </main>
   );
+}
+
+export function PengelolaLogin() {
+  const pathname = usePathname();
+  return <PengelolaLoginContent key={pathname} />;
 }
 
 function Table({
@@ -907,6 +944,7 @@ function ProfileInfo({ icon, label, value }: { icon: IconName; label: string; va
 }
 
 export function PengelolaPage({ page }: { page: PageName }) {
+  const pathname = usePathname();
   const [profile, setProfile] = useState<PengelolaProfile | null>(null);
   const [profileError, setProfileError] = useState("");
   useEffect(() => {
@@ -922,12 +960,12 @@ export function PengelolaPage({ page }: { page: PageName }) {
       });
   }, [page]);
 
-  if (page === "dashboard") return <DashboardPage />;
-  if (page === "stock") return <StockPage />;
-  if (page === "locations") return <LocationsPage />;
-  if (page === "notifications") return <NotificationsPage />;
-  if (page === "history") return <HistoryPage />;
-  if (profile) return <ProfilePage initialProfile={profile} />;
+  if (page === "dashboard") return <DashboardPage key={pathname} />;
+  if (page === "stock") return <StockPage key={pathname} />;
+  if (page === "locations") return <LocationsPage key={pathname} />;
+  if (page === "notifications") return <NotificationsPage key={pathname} />;
+  if (page === "history") return <HistoryPage key={pathname} />;
+  if (profile) return <ProfilePage initialProfile={profile} key={pathname} />;
   return profileError
     ? <div className="pengelola-page"><ErrorNotice>{profileError}</ErrorNotice></div>
     : <p className="pengelola-loading-note">Memuat profil...</p>;

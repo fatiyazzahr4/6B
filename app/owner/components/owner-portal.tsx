@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   useEffect,
+  useRef,
   useState,
   type FormEvent,
   type ReactNode,
@@ -155,6 +156,7 @@ function ownerIdLabel(id: string) {
 }
 
 function useOwnerData<T>(url: string, initialData: T) {
+  const pathname = usePathname();
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -174,7 +176,7 @@ function useOwnerData<T>(url: string, initialData: T) {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [url]);
+  }, [url, pathname]);
 
   return { data, setData, loading, error };
 }
@@ -216,7 +218,9 @@ function OwnerPortalShell({
         body: JSON.stringify({ action: "logout" }),
       });
       if (!response.ok) throw new Error("Logout belum dapat diproses.");
+      setLoggingOut(false);
       router.replace("/owner/login");
+      router.refresh();
     } catch (error) {
       setLoggingOut(false);
       window.alert(error instanceof Error ? error.message : "Logout belum dapat diproses.");
@@ -251,8 +255,9 @@ function OwnerPortalShell({
 
 export { OwnerPortalShell };
 
-export function OwnerLogin() {
+function OwnerLoginContent() {
   const router = useRouter();
+  const timerRef = useRef<number | null>(null);
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -260,6 +265,25 @@ export function OwnerLogin() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [noticeKind, setNoticeKind] = useState<"error" | "success" | "info">("error");
+  const [success, setSuccess] = useState(false);
+
+  function clearTimer() {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }
+
+  function finishLogin() {
+    clearTimer();
+    setSuccess(false);
+    setNotice("");
+    setBusy(false);
+    router.replace("/owner");
+    router.refresh();
+  }
+
+  useEffect(() => () => clearTimer(), []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -273,13 +297,15 @@ export function OwnerLogin() {
       });
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || "Login Owner gagal.");
-      setNoticeKind("success");
-      setNotice("Login Berhasil!");
-      window.setTimeout(() => router.replace("/owner"), 650);
+      setBusy(false);
+      setSuccess(true);
+      clearTimer();
+      timerRef.current = window.setTimeout(() => {
+        finishLogin();
+      }, 1200);
     } catch (error) {
       setNoticeKind("error");
       setNotice(error instanceof Error ? error.message : "Login Owner gagal.");
-    } finally {
       setBusy(false);
     }
   }
@@ -348,8 +374,14 @@ export function OwnerLogin() {
           </form>
         </div>
       </section>
+      {success && <NoticeModal title="Login Berhasil !" onClose={finishLogin} />}
     </main>
   );
+}
+
+export function OwnerLogin() {
+  const pathname = usePathname();
+  return <OwnerLoginContent key={pathname} />;
 }
 
 function MetricCard({ icon, label, value, note, variant }: { icon: OwnerIconName; label: string; value: string; note: string; variant: string }) {
@@ -689,12 +721,13 @@ function downloadPdf(title: string, lines: string[]) {
 }
 
 export default function OwnerPage({ page }: { page: OwnerPageName }) {
+  const pathname = usePathname();
   switch (page) {
-    case "dashboard": return <OwnerDashboard />;
-    case "transactions": return <OwnerReports kind="transactions" />;
-    case "sales": return <OwnerReports kind="sales" />;
-    case "stock": return <OwnerStock />;
-    case "archive": return <OwnerArchive />;
-    case "profile": return <OwnerProfilePage />;
+    case "dashboard": return <OwnerDashboard key={pathname} />;
+    case "transactions": return <OwnerReports key={pathname} kind="transactions" />;
+    case "sales": return <OwnerReports key={pathname} kind="sales" />;
+    case "stock": return <OwnerStock key={pathname} />;
+    case "archive": return <OwnerArchive key={pathname} />;
+    case "profile": return <OwnerProfilePage key={pathname} />;
   }
 }

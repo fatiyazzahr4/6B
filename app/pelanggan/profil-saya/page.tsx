@@ -1,7 +1,10 @@
 import CustomerPortal from "../components/customer-portal";
+import { requirePelangganProfile } from "@/lib/pelanggan-auth";
 
 export const metadata = { title: "Profil Saya" };
+export const instant = false;
 
-export default function CustomerProfilePage() {
-  return <CustomerPortal page="profile" />;
+export default async function CustomerProfilePage() {
+  const profile = await requirePelangganProfile();
+  return <CustomerPortal page="profile" profile={profile} />;
 }

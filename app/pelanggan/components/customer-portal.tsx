@@ -2,7 +2,40 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+
+type CustomerProfile = {
+  id: string;
+  accountId: string;
+  name: string;
+  username: string;
+  email: string;
+  phone: string;
+  postalCode: string;
+  address: string;
+  role: "Pelanggan";
+};
+
+async function postPelanggan<T>(body: Record<string, unknown>) {
+  const response = await fetch("/api/pelanggan", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = (await response.json()) as { error?: string } & T;
+  if (!response.ok) throw new Error(data.error || "Permintaan belum dapat diproses.");
+  return data;
+}
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "P";
+}
 
 type CustomerPage = "dashboard" | "order" | "orders" | "profile";
 type IconName =
@@ -174,18 +207,78 @@ function CustomerIcon({
   );
 }
 
-const products = [
-  { id: "beras", name: "Beras Premium 5 kg", category: "Beras · per Karung", price: 68000, image: "beras.jpg", low: true },
-  { id: "minyak", name: "Minyak Goreng 1 L", category: "Minyak · per Botol", price: 18000, image: "minyak.jpg", low: false },
-  { id: "susu", name: "Susu Kental Manis 370 g", category: "Susu · per Bungkus", price: 13500, image: "susu-kental.jpg", low: true },
-  { id: "telur", name: "Telur Ayam 1 Tray", category: "Telur · per Tray", price: 52000, image: "telur.jpg", low: true },
-  { id: "tepung", name: "Tepung Terigu 1 kg", category: "Tepung · per Bungkus", price: 14000, image: "tepung.jpg", low: false },
-  { id: "kopi", name: "Kopi Bubuk 200 g", category: "Kopi · per Kaleng", price: 16000, image: null, low: false },
-  { id: "mie", name: "Mie Instan Goreng", category: "Mie · per Kotak", price: 3500, image: "mie-instan.jpg", low: false },
-  { id: "gula", name: "Gula Pasir 1 kg", category: "Gula · per Bungkus", price: 17000, image: "gula.jpg", low: false },
-  { id: "teh", name: "Teh Celup 25 pcs", category: "Teh · per Karung", price: 9500, image: "teh.jpg", low: true },
-  { id: "garam", name: "Garam Dapur 250 g", category: "Garam · per Bungkus", price: 3000, image: "garam.jpg", low: true },
-] as const;
+const productImages: Record<string, string> = {
+  BR0001: "beras.jpg",
+  BR0002: "minyak.jpg",
+  BR0003: "gula.jpg",
+  BR0004: "telur.jpg",
+  BR0005: "tepung.jpg",
+  BR0007: "mie-instan.jpg",
+  BR0008: "susu-kental.jpg",
+  BR0009: "teh.jpg",
+  BR0010: "garam.jpg",
+};
+
+type CustomerProduct = {
+  id: string;
+  name: string;
+  category: string;
+  unit: string;
+  price: number;
+  stock: number;
+  low: boolean;
+};
+
+type CustomerOrder = {
+  id: string;
+  date: string;
+  status: string;
+  total: number;
+  itemCount: number;
+  items: { productId: string; name: string; quantity: number; unitPrice: number; subtotal: number }[];
+  transactionId: string | null;
+  transactionStatus: string | null;
+};
+
+function formatRupiah(value: number) {
+  return `Rp ${value.toLocaleString("id-ID")}`;
+}
+
+function formatOrderDate(value: string) {
+  return new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", year: "numeric" }).format(new Date(value));
+}
+
+function usePelangganData<T>(url: string, initialData: T) {
+  const pathname = usePathname();
+  const [data, setData] = useState(initialData);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [revision, setRevision] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    fetch(url, { cache: "no-store" })
+      .then(async (response) => {
+        const result = (await response.json()) as { error?: string } & T;
+        if (!response.ok) throw new Error(result.error || "Data belum dapat dimuat.");
+        if (active) {
+          setData(result);
+          setError("");
+        }
+      })
+      .catch((cause: unknown) => {
+        if (active) setError(cause instanceof Error ? cause.message : "Data belum dapat dimuat.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [url, revision, pathname]);
+
+  return { data, loading, error, reload: () => setRevision((value) => value + 1) };
+}
 
 const promos = [
   { id: "gift", title: "Gratis gift spesial", subtitle: "Untuk belanja jumlah tertentu", className: "promo-yellow" },
@@ -194,10 +287,10 @@ const promos = [
 ] as const;
 
 const pageDetails: Record<CustomerPage, { title: string; description: string; action?: string }> = {
-  dashboard: { title: "Halo, Nafisa!", description: "Pilih barang, buat pesanan dari rumah, lalu bayar di kasir Toko Farid.", action: "Buat Pesanan" },
+  dashboard: { title: "Halo!", description: "Pilih barang, buat pesanan dari rumah, lalu bayar di kasir Toko Farid.", action: "Buat Pesanan" },
   order: { title: "Buat Pesanan", description: "Pilih barang yang ingin dipesan. Pembayaran dilakukan di kasir." },
   orders: { title: "Pesanan Saya", description: "Lihat informasi dan status pesanan Anda." },
-  profile: { title: "Profil Saya", description: "Data akun yang sedang digunakan.", action: "Ubah profil" },
+  profile: { title: "Profil Saya", description: "Data akun yang sedang digunakan." },
 };
 
 function AuthScenery() {
@@ -248,15 +341,49 @@ function AuthCard({
 }
 
 function LoginPage() {
+  const router = useRouter();
+  const timerRef = useRef<number | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [visible, setVisible] = useState(false);
   const [remember, setRemember] = useState(false);
   const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [success, setSuccess] = useState(false);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  function clearRedirectTimer() {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }
+
+  function finishLogin() {
+    clearRedirectTimer();
+    setSuccess(false);
+    setBusy(false);
+    router.replace("/pelanggan");
+    router.refresh();
+  }
+
+  useEffect(() => () => clearRedirectTimer(), []);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setNotice("Login belum dapat diproses karena layanan autentikasi pelanggan belum tersedia. Tidak ada sesi yang dibuat.");
+    setBusy(true);
+    setNotice("");
+    try {
+      await postPelanggan({ action: "login", identifier: username, password, remember });
+      setBusy(false);
+      setSuccess(true);
+      clearRedirectTimer();
+      timerRef.current = window.setTimeout(() => {
+        finishLogin();
+      }, 1200);
+    } catch (cause) {
+      setBusy(false);
+      setNotice(cause instanceof Error ? cause.message : "Login belum dapat diproses.");
+    }
   }
 
   return (
@@ -274,27 +401,79 @@ function LoginPage() {
           <label className="customer-checkbox"><input checked={remember} onChange={(event) => setRemember(event.target.checked)} type="checkbox" /><span>Ingat saya</span></label>
           {password && <button className="customer-text-button" onClick={() => setNotice("Pengaturan ulang kata sandi belum tersedia karena layanan akun pelanggan belum terhubung.")} type="button">Lupa password?</button>}
         </div>
-        <button className="customer-primary-button" type="submit">Masuk <CustomerIcon name="arrow-left" className="customer-arrow-right" /></button>
+        <button className="customer-primary-button" disabled={busy} type="submit">{busy ? "Memproses..." : "Masuk"} <CustomerIcon name="arrow-left" className="customer-arrow-right" /></button>
         {notice && <p aria-live="polite" className="customer-form-notice"><CustomerIcon name="info" />{notice}</p>}
         <div className="customer-auth-divider" />
         <div className="customer-auth-switch"><span>Belum punya akun?</span><Link className="customer-outline-button" href="/pelanggan/registrasi"><CustomerIcon name="plus" />Registrasi sekarang</Link></div>
       </form>
+      {success && (
+        <CustomerModal title="Login Berhasil!" onClose={finishLogin}>
+          <div className="customer-modal-success">
+            <span><CustomerIcon name="check" /></span>
+            <h3>Login Berhasil !</h3>
+          </div>
+        </CustomerModal>
+      )}
     </AuthCard>
   );
 }
 
 function RegisterPage() {
+  const router = useRouter();
+  const timerRef = useRef<number | null>(null);
   const [visible, setVisible] = useState(false);
   const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [success, setSuccess] = useState(false);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  function clearRedirectTimer() {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }
+
+  useEffect(() => () => clearRedirectTimer(), []);
+
+  function finishRegistration() {
+    clearRedirectTimer();
+    setSuccess(false);
+    setBusy(false);
+    router.replace("/pelanggan");
+    router.refresh();
+  }
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     if (formData.get("password") !== formData.get("confirmPassword")) {
       setNotice("Konfirmasi password belum sama.");
       return;
     }
-    setNotice("Registrasi belum dapat diproses karena layanan akun pelanggan belum tersedia. Data ini tidak disimpan.");
+    const text = (key: string) => String(formData.get(key) ?? "");
+    setBusy(true);
+    setNotice("");
+    try {
+      await postPelanggan({
+        action: "register",
+        name: text("name"),
+        username: text("username"),
+        email: text("email"),
+        phone: text("phone"),
+        postalCode: text("postalCode"),
+        address: text("address"),
+        password: text("password"),
+      });
+      setBusy(false);
+      setSuccess(true);
+      clearRedirectTimer();
+      timerRef.current = window.setTimeout(() => {
+        finishRegistration();
+      }, 1400);
+    } catch (cause) {
+      setBusy(false);
+      setNotice(cause instanceof Error ? cause.message : "Registrasi belum dapat diproses.");
+    }
   }
 
   return (
@@ -312,16 +491,38 @@ function RegisterPage() {
           <label className="customer-field"><span>Password</span><span className="customer-input-wrap"><CustomerIcon name="lock" /><input autoComplete="new-password" minLength={6} name="password" placeholder="Minimal 6 karakter" required type={visible ? "text" : "password"} /></span></label>
           <label className="customer-field"><span>Ulangi Password</span><span className="customer-input-wrap"><CustomerIcon name="lock" /><input autoComplete="new-password" minLength={6} name="confirmPassword" placeholder="Konfirmasi Password" required type={visible ? "text" : "password"} /><button aria-label={visible ? "Sembunyikan password" : "Tampilkan password"} className="customer-input-action" onClick={() => setVisible((value) => !value)} type="button"><CustomerIcon name={visible ? "eye" : "eye-off"} /></button></span></label>
         </div>
-        <p className="customer-privacy-note"><CustomerIcon name="shield" />Data Anda hanya digunakan untuk layanan pelanggan Toko Farid.</p>
+        <p className="customer-privacy-note"><CustomerIcon name="shield" />Data Anda disimpan aman dan hanya dipakai untuk pesanan di Toko Farid.</p>
         {notice && <p aria-live="polite" className="customer-form-notice"><CustomerIcon name="info" />{notice}</p>}
-        <div className="customer-register-actions"><button className="customer-primary-button" type="submit"><CustomerIcon name="check" />Daftar</button><Link className="customer-cancel-button" href="/pelanggan/login">Batal</Link></div>
+        <div className="customer-register-actions"><button className="customer-primary-button" disabled={busy} type="submit"><CustomerIcon name="check" />{busy ? "Memproses..." : "Daftar"}</button><Link className="customer-cancel-button" href="/pelanggan/login">Batal</Link></div>
         <div className="customer-auth-switch"><span>Sudah punya akun?</span><Link className="customer-link-pink" href="/pelanggan/login">Login di sini</Link></div>
       </form>
+      {success && <CustomerModal title="Registrasi berhasil" onClose={finishRegistration}><div className="customer-modal-success"><span><CustomerIcon name="check" /></span><h3>Registrasi berhasil</h3><p>Akun Anda sudah dibuat. Anda akan diarahkan ke dashboard.</p><button className="customer-primary-button" onClick={finishRegistration} type="button">Masuk ke Dashboard</button></div></CustomerModal>}
     </AuthCard>
   );
 }
 
-function CustomerSidebar({ active }: { active: CustomerPage }) {
+function useCustomerLogout() {
+  const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function logout() {
+    setLoggingOut(true);
+    try {
+      await postPelanggan({ action: "logout" });
+      setLoggingOut(false);
+      router.replace("/pelanggan/login");
+      router.refresh();
+    } catch {
+      setLoggingOut(false);
+      window.alert("Logout belum dapat diproses. Coba lagi.");
+    }
+  }
+
+  return { logout, loggingOut };
+}
+
+function CustomerSidebar({ active, profile }: { active: CustomerPage; profile: CustomerProfile }) {
+  const { logout, loggingOut } = useCustomerLogout();
   const links: { href: string; label: string; key: CustomerPage; icon: IconName }[] = [
     { href: "/pelanggan", label: "Dashboard", key: "dashboard", icon: "grid" },
     { href: "/pelanggan/buat-pesanan", label: "Buat Pesanan", key: "order", icon: "cart" },
@@ -335,33 +536,34 @@ function CustomerSidebar({ active }: { active: CustomerPage }) {
         <Image alt="" height={34} src="/storefront/toko-farid-logo.png" width={34} />
         <span><strong>Toko Farid</strong><small>Portal Pelanggan</small></span>
       </Link>
-      <div className="customer-sidebar-user"><span className="customer-avatar-small">NU</span><span><strong>Nafisa Uldiyah</strong><small>Pelanggan</small></span></div>
+      <div className="customer-sidebar-user"><span className="customer-avatar-small">{initials(profile.name)}</span><span><strong>{profile.name}</strong><small>Pelanggan</small></span></div>
       <span className="customer-sidebar-label">MENU UTAMA</span>
       <nav aria-label="Navigasi pelanggan" className="customer-sidebar-nav">
         {links.map((link) => <Link aria-current={active === link.key ? "page" : undefined} className={active === link.key ? "is-active" : ""} href={link.href} key={link.key}><CustomerIcon name={link.icon} /><span>{link.label}</span></Link>)}
       </nav>
-      <Link className="customer-logout" href="/pelanggan/login"><CustomerIcon name="logout" />Logout</Link>
+      <button className="customer-logout" disabled={loggingOut} onClick={logout} type="button"><CustomerIcon name="logout" />{loggingOut ? "Keluar..." : "Logout"}</button>
     </aside>
   );
 }
 
 function CustomerShell({
   page,
+  profile,
   children,
-  onAction,
 }: {
   page: CustomerPage;
+  profile: CustomerProfile;
   children: ReactNode;
-  onAction?: () => void;
 }) {
   const details = pageDetails[page];
+  const title = page === "dashboard" ? `Halo, ${profile.name.split(/\s+/)[0]}!` : details.title;
   return (
     <div className={`customer-portal customer-page-${page}`}>
-      <CustomerSidebar active={page} />
+      <CustomerSidebar active={page} profile={profile} />
       <main className="customer-main">
         <header className="customer-page-banner">
-          <div><h1>{details.title}</h1><p>{details.description}</p></div>
-          {details.action && (page === "profile" ? <button className="customer-banner-action" onClick={onAction} type="button"><CustomerIcon name="edit" />{details.action}</button> : <Link className="customer-banner-action" href="/pelanggan/buat-pesanan"><CustomerIcon name="cart" />{details.action}</Link>)}
+          <div><h1>{title}</h1><p>{details.description}</p></div>
+          {details.action && <Link className="customer-banner-action" href="/pelanggan/buat-pesanan"><CustomerIcon name="cart" />{details.action}</Link>}
         </header>
         {children}
       </main>
@@ -369,15 +571,18 @@ function CustomerShell({
   );
 }
 
-function DashboardPage() {
+function DashboardPage({ profile }: { profile: CustomerProfile }) {
   const [modal, setModal] = useState<"promo" | "applied" | null>(null);
+  const { data } = usePelangganData<{ orders: CustomerOrder[] }>("/api/pelanggan?view=orders", { orders: [] });
+  const finished = data.orders.filter((order) => order.status.toLowerCase() === "selesai");
+  const spent = finished.reduce((sum, order) => sum + order.total, 0);
 
   return (
-    <CustomerShell page="dashboard">
+    <CustomerShell page="dashboard" profile={profile}>
       <section aria-label="Ringkasan akun" className="customer-stat-grid">
-        <article className="customer-stat-card"><span className="stat-icon stat-pink"><CustomerIcon name="box" /></span><div><small>Pesanan saya</small><strong>0</strong></div></article>
-        <article className="customer-stat-card"><span className="stat-icon stat-green"><CustomerIcon name="check" /></span><div><small>Selesai</small><strong>0</strong></div></article>
-        <article className="customer-stat-card"><span className="stat-icon stat-orange"><CustomerIcon name="wallet" /></span><div><small>Total belanja</small><strong>Rp 0</strong></div></article>
+        <article className="customer-stat-card"><span className="stat-icon stat-pink"><CustomerIcon name="box" /></span><div><small>Pesanan saya</small><strong>{data.orders.length}</strong></div></article>
+        <article className="customer-stat-card"><span className="stat-icon stat-green"><CustomerIcon name="check" /></span><div><small>Selesai</small><strong>{finished.length}</strong></div></article>
+        <article className="customer-stat-card"><span className="stat-icon stat-orange"><CustomerIcon name="wallet" /></span><div><small>Total belanja</small><strong>{formatRupiah(spent)}</strong></div></article>
         <article className="customer-stat-card"><span className="stat-icon stat-purple"><CustomerIcon name="gift" /></span><div><small>Promo aktif</small><strong>3</strong></div></article>
       </section>
       <section aria-label="Promo Toko Farid" className="customer-promo-grid">
@@ -386,7 +591,7 @@ function DashboardPage() {
           <button onClick={() => setModal("promo")} type="button">Pakai promo</button>
         </article>)}
       </section>
-      <p className="customer-data-note"><CustomerIcon name="info" />Data akun dan pesanan belum tersedia. Nama di navigasi hanya contoh dari gambar referensi.</p>
+      <p className="customer-data-note"><CustomerIcon name="info" />Promo di atas hanya contoh tampilan; belum terhubung ke transaksi.</p>
       {modal && <CustomerModal title={modal === "applied" ? "Promo dipilih" : "Promo Bulan Kembar 10.10"} onClose={() => setModal(null)}>
         {modal === "applied" ? <div className="customer-modal-success"><span><CustomerIcon name="check" /></span><h3>Promo dipilih</h3><p>Promo tersimpan sementara di tampilan ini. Belum ada transaksi yang dibuat.</p></div> : <div className="customer-promo-detail"><div className="customer-coupon"><strong>10.10</strong><span>DISKON SPESIAL</span></div><p>Gunakan kode promo untuk penawaran spesial di Toko Farid.</p><code>TOKOFARID10.10</code><button className="customer-primary-button" onClick={() => setModal("applied")} type="button"><CustomerIcon name="check" />Pakai Promo</button></div>}
       </CustomerModal>}
@@ -403,6 +608,14 @@ function CustomerModal({
   children: ReactNode;
   onClose: () => void;
 }) {
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
   return (
     <div className="customer-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section aria-label={title} aria-modal="true" className="customer-modal" role="dialog">
@@ -413,66 +626,193 @@ function CustomerModal({
   );
 }
 
-function OrdersPage() {
+function OrdersPage({ profile }: { profile: CustomerProfile }) {
+  const { data, loading, error, reload } = usePelangganData<{ orders: CustomerOrder[] }>("/api/pelanggan?view=orders", { orders: [] });
+  const orders = data.orders;
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [editItems, setEditItems] = useState<{ productId: string; name: string; unitPrice: number; quantity: number }[] | null>(null);
+  const [editingId, setEditingId] = useState("");
+  const [deleting, setDeleting] = useState<CustomerOrder | null>(null);
+  const [feedback, setFeedback] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const selected = orders.find((order) => order.id === selectedId) ?? orders[0] ?? null;
+  const canChange = (order: CustomerOrder) => !order.transactionId && order.status.toLowerCase() === "menunggu";
+
+  function startEdit(order: CustomerOrder) {
+    setActionError("");
+    setEditingId(order.id);
+    setEditItems(order.items.map((item) => ({ productId: item.productId, name: item.name, unitPrice: item.unitPrice, quantity: item.quantity })));
+  }
+
+  async function saveEdit() {
+    if (!editItems) return;
+    setBusy(true);
+    setActionError("");
+    try {
+      await postPelanggan({ action: "order:update", orderId: editingId, items: editItems.map((item) => ({ productId: item.productId, quantity: item.quantity })) });
+      setEditItems(null);
+      setFeedback(`Pesanan ${editingId} berhasil diperbarui.`);
+      reload();
+    } catch (cause) {
+      setActionError(cause instanceof Error ? cause.message : "Perubahan belum dapat disimpan.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmDelete() {
+    if (!deleting) return;
+    const deletedId = deleting.id;
+    setBusy(true);
+    setActionError("");
+    try {
+      await postPelanggan({ action: "order:delete", orderId: deletedId });
+      setDeleting(null);
+      setSelectedId(null);
+      setFeedback(`Pesanan ${deletedId} berhasil dihapus.`);
+      reload();
+    } catch (cause) {
+      setActionError(cause instanceof Error ? cause.message : "Pesanan belum dapat dihapus.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <CustomerShell page="orders">
+    <CustomerShell page="orders" profile={profile}>
       <section className="customer-content-card customer-orders-card">
-        <div className="customer-section-heading"><div><h2>Daftar Pesanan</h2><p>Riwayat pesanan Anda akan ditampilkan di sini.</p></div><span className="customer-count-badge">0 pesanan</span></div>
+        <div className="customer-section-heading"><div><h2>Daftar pembelian</h2><p>Daftar pembelian dan status.</p></div><span className="customer-count-badge">{orders.length} pesanan</span></div>
+        {(error || actionError) && !editItems && !deleting && <p className="customer-form-notice"><CustomerIcon name="info" />{actionError || error}</p>}
         <div className="customer-table-wrap">
           <table className="customer-orders-table">
-            <thead><tr><th>ID Pesanan</th><th>Tanggal</th><th>Jumlah Barang</th><th>Total</th><th>Status</th><th>Detail</th></tr></thead>
-            <tbody><tr><td className="customer-empty-row" colSpan={6}><span><CustomerIcon name="box" /></span><strong>Belum ada data pesanan</strong><small>Layanan pesanan pelanggan belum terhubung, jadi belum ada riwayat yang dapat ditampilkan.</small><Link className="customer-outline-button" href="/pelanggan/buat-pesanan">Lihat katalog referensi</Link></td></tr></tbody>
+            <thead><tr><th>ID</th><th>Tanggal</th><th>Item</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody>
+              {orders.length === 0 ? <tr><td className="customer-empty-row" colSpan={6}><span><CustomerIcon name="box" /></span><strong>{loading ? "Memuat pesanan..." : "Belum ada data pesanan"}</strong>{!loading && <small>Pesanan yang Anda buat akan muncul di sini.</small>}<Link className="customer-outline-button" href="/pelanggan/buat-pesanan">Buat pesanan</Link></td></tr> : orders.map((order) => <tr aria-selected={selected?.id === order.id} key={order.id}>
+                <td className="customer-order-id">{order.id}</td>
+                <td>{formatOrderDate(order.date)}</td>
+                <td>{order.itemCount} barang</td>
+                <td>{formatRupiah(order.total)}</td>
+                <td><span className="customer-order-status" data-status={order.status.toLowerCase()}>{order.status}</span></td>
+                <td><div className="customer-order-actions">
+                  <button className="is-detail" onClick={() => setSelectedId(order.id)} type="button"><CustomerIcon name="eye" />Detail</button>
+                  {canChange(order) && <button className="is-edit" onClick={() => startEdit(order)} type="button"><CustomerIcon name="edit" />Ubah</button>}
+                  {canChange(order) && <button className="is-danger" onClick={() => { setActionError(""); setDeleting(order); }} type="button"><CustomerIcon name="trash" />Hapus</button>}
+                </div></td>
+              </tr>)}
+            </tbody>
           </table>
         </div>
       </section>
+      {selected && <section className="customer-content-card customer-order-detail">
+        <div className="customer-section-heading"><h2>Detail {selected.id} - {formatOrderDate(selected.date)}</h2>{selected.transactionId && <span className="customer-order-status" data-status="lunas">Transaksi {selected.transactionId}{selected.transactionStatus ? ` (${selected.transactionStatus})` : ""}</span>}</div>
+        <ul className="customer-order-detail-items">
+          {selected.items.map((item) => <li key={item.productId}><strong>{item.name}</strong><small>{formatRupiah(item.unitPrice)} × {item.quantity}</small><span>{formatRupiah(item.subtotal)}</span></li>)}
+        </ul>
+        <p className="customer-order-detail-total">{formatRupiah(selected.total)}</p>
+      </section>}
+      {editItems && <CustomerModal title="Ubah pesanan" onClose={() => setEditItems(null)}>
+        <div className="customer-order-edit">
+          <h3>Ubah pesanan {editingId}</h3>
+          <ul>
+            {editItems.map((item) => <li key={item.productId}>
+              <span>{item.name}<small>{formatRupiah(item.unitPrice)}</small></span>
+              <div className="customer-quantity-control"><button aria-label={`Kurangi ${item.name}`} onClick={() => setEditItems((current) => current && current.map((row) => row.productId === item.productId ? { ...row, quantity: Math.max(1, row.quantity - 1) } : row))} type="button"><CustomerIcon name="minus" /></button><span>{item.quantity}</span><button aria-label={`Tambah ${item.name}`} onClick={() => setEditItems((current) => current && current.map((row) => row.productId === item.productId ? { ...row, quantity: row.quantity + 1 } : row))} type="button"><CustomerIcon name="plus" /></button></div>
+              <button aria-label={`Hapus ${item.name}`} disabled={editItems.length === 1} onClick={() => setEditItems((current) => current && current.filter((row) => row.productId !== item.productId))} type="button"><CustomerIcon name="trash" /></button>
+            </li>)}
+          </ul>
+          <p className="customer-order-edit-total">Total {formatRupiah(editItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0))}</p>
+          {actionError && <p aria-live="polite" className="customer-form-notice"><CustomerIcon name="info" />{actionError}</p>}
+          <button className="customer-primary-button" disabled={busy} onClick={saveEdit} type="button"><CustomerIcon name="check" />{busy ? "Menyimpan..." : "Simpan perubahan"}</button>
+        </div>
+      </CustomerModal>}
+      {deleting && <CustomerModal title="Hapus pesanan" onClose={() => setDeleting(null)}>
+        <div className="customer-modal-success customer-modal-warning"><span><CustomerIcon name="trash" /></span><h3>Hapus pesanan {deleting.id}?</h3><p>Pesanan ini akan dihapus dan tidak bisa dikembalikan.</p>
+          {actionError && <p aria-live="polite" className="customer-form-notice"><CustomerIcon name="info" />{actionError}</p>}
+          <button className="customer-primary-button" disabled={busy} onClick={confirmDelete} type="button">{busy ? "Menghapus..." : "Ya, hapus"}</button>
+          <button className="customer-cancel-button" disabled={busy} onClick={() => setDeleting(null)} type="button">Batal</button></div>
+      </CustomerModal>}
+      {feedback && <CustomerModal title="Notifikasi pesanan" onClose={() => setFeedback("")}>
+        <div className="customer-modal-success"><span><CustomerIcon name="check" /></span><h3>Berhasil</h3><p>{feedback}</p>
+          <button className="customer-primary-button" onClick={() => setFeedback("")} type="button">Mengerti</button></div>
+      </CustomerModal>}
     </CustomerShell>
   );
 }
 
-function ProfilePage() {
+function ProfilePage({ profile }: { profile: CustomerProfile }) {
+  const router = useRouter();
+  const { logout, loggingOut } = useCustomerLogout();
   const [editing, setEditing] = useState(false);
   const [notice, setNotice] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const { data: orderData } = usePelangganData<{ orders: CustomerOrder[] }>("/api/pelanggan?view=orders", { orders: [] });
+  const finishedCount = orderData.orders.filter((order) => order.status.toLowerCase() === "selesai").length;
 
-  function save(event: FormEvent<HTMLFormElement>) {
+  async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setNotice("Perubahan belum disimpan karena layanan profil pelanggan belum tersedia.");
+    const formData = new FormData(event.currentTarget);
+    const text = (key: string) => String(formData.get(key) ?? "");
+    setSaving(true);
+    setNotice("");
+    try {
+      await postPelanggan({
+        action: "profile",
+        name: text("name"),
+        username: text("username"),
+        phone: text("phone"),
+        email: text("email"),
+        postalCode: text("postalCode"),
+        address: text("address"),
+        password: text("password"),
+      });
+      setEditing(false);
+      setSaved(true);
+      router.refresh();
+    } catch (cause) {
+      setNotice(cause instanceof Error ? cause.message : "Perubahan belum dapat disimpan.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
-    <CustomerShell onAction={() => setEditing(true)} page="profile">
+    <CustomerShell page="profile" profile={profile}>
       <div className="customer-profile-grid">
         <section className="customer-profile-summary">
           <div className="customer-profile-cover" />
-          <span className="customer-avatar-large">NU</span>
-          <div className="customer-profile-identity"><h2>Nafisa Uldiyah</h2><p>@nafisa.uldyah</p><span>Pelanggan</span></div>
-          <div className="customer-profile-stats"><div><CustomerIcon name="box" /><strong>—</strong><small>Pesanan</small></div><div><CustomerIcon name="check" /><strong>—</strong><small>Selesai</small></div><div><CustomerIcon name="star" /><strong>—</strong><small>Poin</small></div></div>
-          <button className="customer-primary-button" onClick={() => { setEditing(true); setNotice(""); }} type="button">Ubah profil</button>
-          <Link className="customer-profile-logout" href="/pelanggan/login"><CustomerIcon name="logout" />Logout</Link>
+          <span className="customer-avatar-large">{initials(profile.name)}</span>
+          <div className="customer-profile-identity"><h2>{profile.name}</h2><p>@{profile.username}</p><span>Pelanggan</span></div>
+          <div className="customer-profile-stats"><div><CustomerIcon name="box" /><strong>{orderData.orders.length}</strong><small>Pesanan</small></div><div><CustomerIcon name="check" /><strong>{finishedCount}</strong><small>Selesai</small></div><div><CustomerIcon name="star" /><strong>—</strong><small>Poin</small></div></div>
+          <button className="customer-primary-button" onClick={() => { setEditing(true); setNotice(""); }} type="button"><CustomerIcon name="edit" />Ubah profil</button>
+          <button className="customer-profile-logout" disabled={loggingOut} onClick={logout} type="button"><CustomerIcon name="logout" />{loggingOut ? "Keluar..." : "Logout"}</button>
         </section>
         <section className="customer-content-card customer-profile-data">
-          <div className="customer-section-heading"><div><h2>Data akun</h2><p>Data akun yang sedang digunakan.</p></div>{!editing && <button className="customer-profile-edit" onClick={() => setEditing(true)} type="button"><CustomerIcon name="edit" />Ubah profil</button>}</div>
+          <div className="customer-section-heading"><div><h2>Data akun</h2><p>Data akun yang sedang digunakan.</p></div></div>
           {editing ? <form className="customer-profile-form" id="edit-profile" onSubmit={save}>
-            <label className="customer-field"><span>Nama lengkap</span><input defaultValue="Nafisa Uldiyah" required /></label>
-            <label className="customer-field"><span>Username</span><input defaultValue="nafisa.uldyah" required /></label>
-            <label className="customer-field"><span>No. telepon</span><input defaultValue="081234567804" required /></label>
-            <label className="customer-field"><span>Email</span><input defaultValue="nafisa.uldyah@gmail.com" required type="email" /></label>
-            <label className="customer-field"><span>Kode pos</span><input defaultValue="25173" required /></label>
-            <label className="customer-field"><span>Alamat</span><input defaultValue="Padang, Sumatera Barat" required /></label>
+            <label className="customer-field"><span>Nama lengkap</span><input defaultValue={profile.name} maxLength={100} name="name" required /></label>
+            <label className="customer-field"><span>Username</span><input defaultValue={profile.username} maxLength={50} name="username" required /></label>
+            <label className="customer-field"><span>No. telepon</span><input defaultValue={profile.phone} maxLength={20} name="phone" required /></label>
+            <label className="customer-field"><span>Email</span><input defaultValue={profile.email} maxLength={100} name="email" required type="email" /></label>
+            <label className="customer-field"><span>Kode pos</span><input defaultValue={profile.postalCode} name="postalCode" pattern="[0-9]{5}" required /></label>
+            <label className="customer-field"><span>Alamat</span><input defaultValue={profile.address} maxLength={150} name="address" required /></label>
+            <label className="customer-field"><span>Password baru (opsional)</span><input autoComplete="new-password" minLength={6} name="password" placeholder="Kosongkan jika tidak diubah" type="password" /></label>
             {notice && <p aria-live="polite" className="customer-form-notice"><CustomerIcon name="info" />{notice}</p>}
-            <div className="customer-register-actions"><button className="customer-primary-button" type="submit"><CustomerIcon name="check" />Simpan perubahan</button><button className="customer-cancel-button" onClick={() => { setEditing(false); setNotice(""); }} type="button">Batal</button></div>
+            <div className="customer-register-actions"><button className="customer-primary-button" disabled={saving} type="submit"><CustomerIcon name="check" />{saving ? "Menyimpan..." : "Simpan perubahan"}</button><button className="customer-cancel-button" onClick={() => { setEditing(false); setNotice(""); }} type="button">Batal</button></div>
           </form> : <div className="customer-profile-fields">
-            <ProfileField icon="lock" label="ID akun" value="A0004" />
+            <ProfileField icon="lock" label="ID akun" value={profile.accountId} />
             <ProfileField icon="shield" label="Role" value="Pelanggan" />
-            <ProfileField icon="user" label="Nama lengkap" value="Nafisa Uldiyah" />
-            <ProfileField icon="user" label="Username" value="nafisa.uldyah" />
-            <ProfileField icon="phone" label="No. telepon" value="081234567804" />
-            <ProfileField icon="mail" label="Email" value="nafisa.uldyah@gmail.com" />
-            <ProfileField icon="map" label="Kode pos" value="25173" />
-            <ProfileField icon="map" label="Alamat" value="Padang, Sumatera Barat" />
+            <ProfileField icon="user" label="Nama lengkap" value={profile.name} />
+            <ProfileField icon="user" label="Username" value={profile.username} />
+            <ProfileField icon="phone" label="No. telepon" value={profile.phone} />
+            <ProfileField icon="mail" label="Email" value={profile.email} />
+            <ProfileField icon="map" label="Kode pos" value={profile.postalCode} />
+            <ProfileField icon="map" label="Alamat" value={profile.address} />
           </div>}
-          <p className="customer-data-note"><CustomerIcon name="info" />Contoh data profil dari desain referensi; belum terhubung ke akun pelanggan.</p>
         </section>
       </div>
+      {saved && <CustomerModal title="Profil berhasil diubah" onClose={() => setSaved(false)}><div className="customer-modal-success"><span><CustomerIcon name="check" /></span><h3>Profil berhasil diubah</h3><p>Data akun Anda sudah diperbarui.</p><button className="customer-primary-button" onClick={() => setSaved(false)} type="button">Mengerti</button></div></CustomerModal>}
     </CustomerShell>
   );
 }
@@ -481,61 +821,123 @@ function ProfileField({ icon, label, value }: { icon: IconName; label: string; v
   return <article className="customer-profile-field"><span className="customer-profile-field-icon"><CustomerIcon name={icon} /></span><div><small>{label}</small><strong>{value}</strong></div></article>;
 }
 
-function OrderPage() {
+function OrderPage({ profile }: { profile: CustomerProfile }) {
+  const router = useRouter();
+  const timerRef = useRef<number | null>(null);
+  const { data, loading, error, reload } = usePelangganData<{ products: CustomerProduct[] }>("/api/pelanggan?view=catalog", { products: [] });
+  const products = data.products;
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [cart, setCart] = useState<Record<string, number>>({});
-  const [showNotice, setShowNotice] = useState(false);
+  const [result, setResult] = useState<{ id: string; total: number } | null>(null);
+  const [submitError, setSubmitError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const cartItems = products.filter((product) => cart[product.id]);
   const itemCount = cartItems.reduce((sum, product) => sum + cart[product.id], 0);
   const total = cartItems.reduce((sum, product) => sum + product.price * cart[product.id], 0);
-  const currency = (value: number) => `Rp ${value.toLocaleString("id-ID")}`;
+
+  function clearRedirectTimer() {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }
+
+  function closeResultModal() {
+    clearRedirectTimer();
+    setResult(null);
+  }
+
+  function goToOrders() {
+    closeResultModal();
+    router.push("/pelanggan/pesanan-saya");
+    router.refresh();
+  }
+
+  useEffect(() => () => clearRedirectTimer(), []);
 
   function setQuantity(id: string, value: number) {
     setQuantities((current) => ({ ...current, [id]: Math.max(1, value) }));
   }
 
-  function addToCart(id: string) {
-    setCart((current) => ({ ...current, [id]: (current[id] ?? 0) + (quantities[id] ?? 1) }));
+  function addToCart(product: CustomerProduct) {
+    setCart((current) => {
+      const wanted = (current[product.id] ?? 0) + (quantities[product.id] ?? 1);
+      return { ...current, [product.id]: Math.min(wanted, Math.max(product.stock, 1)) };
+    });
+  }
+
+  async function confirmOrder() {
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      const response = await postPelanggan<{ order: { id: string; total: number } }>({
+        action: "order:create",
+        items: cartItems.map((product) => ({ productId: product.id, quantity: cart[product.id] })),
+      });
+      setResult(response.order);
+      setCart({});
+      reload();
+      clearRedirectTimer();
+      timerRef.current = window.setTimeout(() => {
+        setResult(null);
+        timerRef.current = null;
+        router.push("/pelanggan/pesanan-saya");
+        router.refresh();
+      }, 1800);
+    } catch (cause) {
+      setSubmitError(cause instanceof Error ? cause.message : "Pesanan belum dapat dikirim.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
-    <CustomerShell page="order">
-      <p className="customer-data-note"><CustomerIcon name="info" />Katalog berikut meniru gambar referensi; harga dan stok belum tersambung ke data inventaris.</p>
+    <CustomerShell page="order" profile={profile}>
+      {error && <p className="customer-data-note"><CustomerIcon name="info" />{error}</p>}
+      {loading && <p className="customer-data-note"><CustomerIcon name="clock" />Memuat katalog...</p>}
       <div className="customer-order-layout">
         <section aria-label="Daftar produk" className="customer-product-grid">
-          {products.map((product) => <article className="customer-product-card" key={product.id}>
-            {product.low && <span className="customer-stock-badge">Menipis</span>}
-            <div className="customer-product-image">{product.image ? <Image alt={product.name} height={160} src={`/customer-products/${product.image}`} width={190} /> : <span aria-hidden="true" className="customer-product-placeholder"><CustomerIcon name="box" /></span>}</div>
-            <h2>{product.name}</h2><p>{product.category}</p><strong className="customer-product-price">{currency(product.price)}</strong>
-            <div className="customer-product-actions"><div className="customer-quantity-control"><button aria-label={`Kurangi ${product.name}`} onClick={() => setQuantity(product.id, (quantities[product.id] ?? 1) - 1)} type="button"><CustomerIcon name="minus" /></button><span>{quantities[product.id] ?? 1}</span><button aria-label={`Tambah ${product.name}`} onClick={() => setQuantity(product.id, (quantities[product.id] ?? 1) + 1)} type="button"><CustomerIcon name="plus" /></button></div><button className="customer-add-button" onClick={() => addToCart(product.id)} type="button"><CustomerIcon name="plus" />Tambah</button></div>
-          </article>)}
+          {products.map((product) => {
+            const image = productImages[product.id];
+            const soldOut = product.stock <= 0;
+            return <article className="customer-product-card" key={product.id}>
+              {product.low && <span className="customer-stock-badge">{soldOut ? "Habis" : "Menipis"}</span>}
+              <div className="customer-product-image">{image ? <Image alt={product.name} height={160} src={`/customer-products/${image}`} width={190} /> : <span aria-hidden="true" className="customer-product-placeholder"><CustomerIcon name="box" /></span>}</div>
+              <h2>{product.name}</h2><p>{product.category} · per {product.unit}</p><strong className="customer-product-price">{formatRupiah(product.price)}</strong>
+              <div className="customer-product-actions"><div className="customer-quantity-control"><button aria-label={`Kurangi ${product.name}`} onClick={() => setQuantity(product.id, (quantities[product.id] ?? 1) - 1)} type="button"><CustomerIcon name="minus" /></button><span>{quantities[product.id] ?? 1}</span><button aria-label={`Tambah ${product.name}`} onClick={() => setQuantity(product.id, (quantities[product.id] ?? 1) + 1)} type="button"><CustomerIcon name="plus" /></button></div><button className="customer-add-button" disabled={soldOut} onClick={() => addToCart(product)} type="button"><CustomerIcon name="plus" />Tambah</button></div>
+            </article>;
+          })}
         </section>
         <aside aria-label="Ringkasan pesanan" className="customer-cart-card">
           <div className="customer-cart-heading"><h2>Pesanan baru</h2><span>{itemCount} barang</span></div>
-          {cartItems.length > 0 && <ul className="customer-cart-items">{cartItems.map((product) => <li key={product.id}><span>{product.name}<small>{cart[product.id]} × {currency(product.price)}</small></span><strong>{currency(cart[product.id] * product.price)}</strong><button aria-label={`Hapus ${product.name}`} onClick={() => setCart((current) => { const next = { ...current }; delete next[product.id]; return next; })} type="button"><CustomerIcon name="trash" /></button></li>)}</ul>}
-          <div className="customer-cart-total"><span>Total harga</span><strong>{currency(total)}</strong></div>
+          {cartItems.length > 0 && <ul className="customer-cart-items">{cartItems.map((product) => <li key={product.id}><span>{product.name}<small>{cart[product.id]} × {formatRupiah(product.price)}</small></span><strong>{formatRupiah(cart[product.id] * product.price)}</strong><button aria-label={`Hapus ${product.name}`} onClick={() => setCart((current) => { const next = { ...current }; delete next[product.id]; return next; })} type="button"><CustomerIcon name="trash" /></button></li>)}</ul>}
+          <div className="customer-cart-total"><span>Total harga</span><strong>{formatRupiah(total)}</strong></div>
           <div className="customer-cashier-note"><CustomerIcon name="info" /><p><strong>Pembayaran dilakukan di kasir.</strong><span>Stok dicek otomatis saat pesanan dikonfirmasi.</span></p></div>
           <div className="customer-cart-assurance"><span><CustomerIcon name="shield" />Transaksi aman</span><span><CustomerIcon name="clock" />Siap diproses kasir</span></div>
-          <button className="customer-primary-button" disabled={cartItems.length === 0} onClick={() => setShowNotice(true)} type="button"><CustomerIcon name="check" />Konfirmasi Pembelian</button>
-          <button className="customer-clear-cart" disabled={cartItems.length === 0} onClick={() => setCart({})} type="button"><CustomerIcon name="trash" />Kosongkan pesanan</button>
+          {submitError && <p aria-live="polite" className="customer-form-notice"><CustomerIcon name="info" />{submitError}</p>}
+          <button className="customer-primary-button" disabled={cartItems.length === 0 || submitting} onClick={confirmOrder} type="button"><CustomerIcon name="check" />{submitting ? "Mengirim..." : "Konfirmasi Pembelian"}</button>
+          <button className="customer-clear-cart" disabled={cartItems.length === 0 || submitting} onClick={() => setCart({})} type="button"><CustomerIcon name="trash" />Kosongkan pesanan</button>
         </aside>
       </div>
-      {showNotice && <CustomerModal title="Pesanan belum diproses" onClose={() => setShowNotice(false)}><div className="customer-modal-success customer-modal-warning"><span><CustomerIcon name="info" /></span><h3>Pesanan belum diproses</h3><p>Keranjang ini hanya tersimpan sementara di browser. Layanan pemesanan belum terhubung, sehingga pesanan tidak dikirim atau disimpan.</p><button className="customer-primary-button" onClick={() => setShowNotice(false)} type="button">Mengerti</button></div></CustomerModal>}
+      {result && <CustomerModal title="Pesanan Telah Diproses" onClose={closeResultModal}><div className="customer-modal-success"><span><CustomerIcon name="check" /></span><h3>Pesanan Telah Diproses</h3><p>Nomor pesanan {result.id} dengan total {formatRupiah(result.total)}. Bayar di kasir Toko Farid untuk menyelesaikannya.</p><button className="customer-primary-button" onClick={goToOrders} type="button">Lihat Pesanan Saya</button></div></CustomerModal>}
     </CustomerShell>
   );
 }
 
-export default function CustomerPortal({ page }: { page: CustomerPage }) {
-  if (page === "dashboard") return <DashboardPage />;
-  if (page === "order") return <OrderPage />;
-  if (page === "orders") return <OrdersPage />;
-  return <ProfilePage />;
+export default function CustomerPortal({ page, profile }: { page: CustomerPage; profile: CustomerProfile }) {
+  const pathname = usePathname();
+  if (page === "dashboard") return <DashboardPage key={pathname} profile={profile} />;
+  if (page === "order") return <OrderPage key={pathname} profile={profile} />;
+  if (page === "orders") return <OrdersPage key={pathname} profile={profile} />;
+  return <ProfilePage key={pathname} profile={profile} />;
 }
 
 export function CustomerLogin() {
-  return <LoginPage />;
+  const pathname = usePathname();
+  return <LoginPage key={pathname} />;
 }
 
 export function CustomerRegistration() {
-  return <RegisterPage />;
+  const pathname = usePathname();
+  return <RegisterPage key={pathname} />;
 }

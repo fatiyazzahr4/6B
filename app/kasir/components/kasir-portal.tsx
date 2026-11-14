@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   useEffect,
+  useRef,
   useState,
   type FormEvent,
   type ReactNode,
@@ -185,6 +186,7 @@ async function postKasir<T>(body: Record<string, unknown>) {
 }
 
 function useKasirData<T>(url: string, initialData: T) {
+  const pathname = usePathname();
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -205,7 +207,7 @@ function useKasirData<T>(url: string, initialData: T) {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [url, revision]);
+  }, [url, revision, pathname]);
 
   function refresh() {
       setLoading(true);
@@ -257,6 +259,14 @@ function Modal({
   children: ReactNode;
   className?: string;
 }) {
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
   return (
     <div
       className="kasir-modal-overlay"
@@ -329,7 +339,9 @@ export function KasirShell({
     setLoggingOut(true);
     try {
       await postKasir({ action: "logout" });
+      setLoggingOut(false);
       router.replace("/kasir/login");
+      router.refresh();
     } catch (error) {
       setLoggingOut(false);
       window.alert(error instanceof Error ? error.message : "Logout belum dapat diproses.");
@@ -403,8 +415,9 @@ export function KasirShell({
   );
 }
 
-export function KasirLogin() {
+function KasirLoginContent() {
   const router = useRouter();
+  const timerRef = useRef<number | null>(null);
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -413,6 +426,23 @@ export function KasirLogin() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  function clearTimer() {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }
+
+  function finishLogin() {
+    clearTimer();
+    setSuccess(false);
+    setBusy(false);
+    router.replace("/kasir");
+    router.refresh();
+  }
+
+  useEffect(() => () => clearTimer(), []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -425,8 +455,10 @@ export function KasirLogin() {
         password,
         remember,
       });
+      setBusy(false);
       setSuccess(true);
-      window.setTimeout(() => router.replace("/kasir"), 1100);
+      clearTimer();
+      timerRef.current = window.setTimeout(() => finishLogin(), 1100);
     } catch (cause) {
       setBusy(false);
       setError(cause instanceof Error ? cause.message : "Login belum dapat diproses.");
@@ -523,7 +555,7 @@ export function KasirLogin() {
         </div>
       </section>
       {success && (
-        <Modal className="kasir-success-modal" onClose={() => router.replace("/kasir")} title="Login Berhasil!">
+        <Modal className="kasir-success-modal" onClose={finishLogin} title="Login Berhasil!">
           <span className="kasir-success-check"><KasirIcon name="check" /></span>
           <h3>Login Berhasil !</h3>
           <p>Menyiapkan Portal Kasir...</p>
@@ -531,6 +563,11 @@ export function KasirLogin() {
       )}
     </main>
   );
+}
+
+export function KasirLogin() {
+  const pathname = usePathname();
+  return <KasirLoginContent key={pathname} />;
 }
 
 function DataTable({
@@ -812,7 +849,7 @@ function OrderModal({ order, onClose }: { order: KasirOrder; onClose: () => void
       <StatusBadge status={order.status} />
       <div className="kasir-modal-actions">
         <button className="kasir-outline-button" onClick={onClose} type="button">Tutup</button>
-        {order.canProcess && <Link className="kasir-primary-button" href={`/kasir/transaksi-baru?pesanan=${encodeURIComponent(order.id)}`}><KasirIcon name="arrow-right" />Proses Pesanan</Link>}
+        {order.canProcess && <Link className="kasir-primary-button" href={`/kasir/transaksi-baru?pesanan=${encodeURIComponent(order.id)}`} onClick={onClose}><KasirIcon name="arrow-right" />Proses Pesanan</Link>}
       </div>
     </Modal>
   );
@@ -1044,7 +1081,7 @@ function CheckoutPage({ orderId }: { orderId?: string }) {
           <p>{success}</p>
           <div className="kasir-modal-actions">
             <button className="kasir-outline-button" onClick={() => setSuccess("")} type="button">Transaksi baru</button>
-            <button className="kasir-primary-button" onClick={() => router.push("/kasir/daftar-transaksi")} type="button">Daftar Transaksi</button>
+            <button className="kasir-primary-button" onClick={() => { setSuccess(""); router.push("/kasir/daftar-transaksi"); }} type="button">Daftar Transaksi</button>
           </div>
         </Modal>
       )}
@@ -1189,9 +1226,10 @@ export function KasirPage({
   page: "dashboard" | "checkout" | "transactions" | "orders" | "profile";
   orderId?: string;
 }) {
-  if (page === "checkout") return <CheckoutPage key={orderId ?? "manual"} orderId={orderId} />;
-  if (page === "transactions") return <TransactionsPage />;
-  if (page === "orders") return <OrdersPage />;
-  if (page === "profile") return <ProfilePage />;
-  return <DashboardPage />;
+  const pathname = usePathname();
+  if (page === "checkout") return <CheckoutPage key={`${pathname}:${orderId ?? "manual"}`} orderId={orderId} />;
+  if (page === "transactions") return <TransactionsPage key={pathname} />;
+  if (page === "orders") return <OrdersPage key={pathname} />;
+  if (page === "profile") return <ProfilePage key={pathname} />;
+  return <DashboardPage key={pathname} />;
 }
